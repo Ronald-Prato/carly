@@ -1,0 +1,9 @@
+/** Estilos del panel de chat (grises neutros; tokens en `globals.css`). */
+
+export const agentScrollSurface =
+  "[scrollbar-color:var(--carly-agent-scroll-thumb)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-[var(--carly-agent-scroll-thumb)] [&::-webkit-scrollbar-thumb:hover]:bg-[var(--carly-agent-scroll-thumb-hover)]";
+
+export const agentMessageAssistant =
+  "assistant-markdown w-full max-w-full self-start rounded-none border-0 bg-transparent p-0 text-[15px] leading-[1.62] text-[var(--carly-agent-text)] motion-safe:transition-[opacity,transform,box-shadow] motion-safe:duration-200 motion-safe:ease-out [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_a]:text-[var(--carly-agent-link)] [&_blockquote]:my-[0.65em] [&_blockquote]:border-l-[3px] [&_blockquote]:border-[var(--carly-agent-blockquote-border)] [&_blockquote]:pl-3 [&_blockquote]:text-[var(--carly-agent-text-muted)] [&_code]:rounded-[5px] [&_code]:border [&_code]:border-[var(--carly-agent-code-border)] [&_code]:bg-[var(--carly-agent-code-bg)] [&_code]:px-[0.35em] [&_code]:py-[0.1em] [&_code]:font-mono [&_code]:text-[0.92em] [&_code]:text-[var(--carly-agent-code-text)] [&_h1]:my-[0.8em] [&_h1]:mb-[0.4em] [&_h1]:text-[1.35em] [&_h1]:leading-[1.25] [&_h1]:text-[var(--carly-agent-text)] [&_h2]:my-[0.8em] [&_h2]:mb-[0.4em] [&_h2]:text-[1.2em] [&_h2]:leading-[1.25] [&_h2]:text-[var(--carly-agent-text)] [&_h3]:my-[0.8em] [&_h3]:mb-[0.4em] [&_h3]:text-[1.08em] [&_h3]:leading-[1.25] [&_h3]:text-[var(--carly-agent-text)] [&_li]:text-[15px] [&_li]:leading-[1.62] [&_ol]:my-[0.65em] [&_ol]:pl-[1.35em] [&_p]:my-[0.65em] [&_p]:text-[15px] [&_p]:leading-[1.62] [&_strong]:font-semibold [&_ul]:my-[0.65em] [&_ul]:pl-[1.35em] [&_em]:italic";
+
+export const agentMessageAssistantStreaming = "opacity-95";
