@@ -17,8 +17,17 @@ export default defineSchema({
     text: v.string(),
   }),
   /**
-   * Hoja de vida (CV): metadatos + HTML generado. `storageId` es el `documentId` en
-   * Convex File Storage; el binario vive allí, `content` es la transcripción/estructura.
+   * Hoja de vida (CV).
+   *
+   * `data` (objetivo a futuro) es la fuente de verdad estructurada: un objeto
+   * con `basics` + `sections[]` (cada sección con un `shape` cerrado y un
+   * `payload` tipado). El render a HTML se hace bajo demanda con plantillas
+   * puras (`lib/cvTemplates`), por lo que editar `data` actualiza todas las
+   * plantillas y todas las variantes (por oferta) automáticamente.
+   *
+   * `content` se conserva como caché derivada / compatibilidad con CVs antiguos
+   * cuyo enriquecimiento solo produjo HTML. Cuando `data` esté poblado, `content`
+   * pasa a ser un artefacto opcional.
    */
   resumes: defineTable({
     userId: v.id("users"),
@@ -26,8 +35,17 @@ export default defineSchema({
     fileName: v.string(),
     /** Título mostrado; si falta, la UI deriva del nombre del archivo. */
     title: v.optional(v.string()),
-    /** HTML (p. ej. estilo Europass) generado a partir del PDF. */
+    /** HTML cacheado/legado generado a partir del PDF. */
     content: v.optional(v.string()),
+    /**
+     * Datos estructurados del CV. `v.any()` aquí porque la forma cerrada está
+     * en `lib/cvTemplates/types.ts` (CvData) y se valida en código antes de
+     * escribir. La razón: la unión discriminada por `shape` no se expresa de
+     * forma limpia con validators de Convex sin verbosidad excesiva.
+     */
+    data: v.optional(v.any()),
+    /** ID de plantilla del catálogo (`classic-sidebar`, etc.). */
+    templateId: v.optional(v.string()),
     uploadedAt: v.number(),
     updatedAt: v.optional(v.number()),
     enrichmentStatus: v.optional(
@@ -56,9 +74,18 @@ export default defineSchema({
     userId: v.id("users"),
     title: v.string(),
     /**
-     * Resume draft (e.g. HTML) for this chat; updated by the agent via the dedicated tool.
+     * Borrador del resumen del CV asociado al chat, en **Markdown** (estilo
+     * página de Notion). Lo actualiza el agente vía `update_conversation_resume_draft`.
+     * Debe mantenerse coherente con `data` (misma información).
      */
     content: v.optional(v.string()),
+    /**
+     * Borrador estructurado del CV (CvData) asociado al chat. Es la fuente de
+     * verdad para renderizar plantillas/PDFs. `v.any()` aquí porque la forma
+     * cerrada (unión discriminada por `shape`) vive en `lib/cvTemplates/types.ts`
+     * y se valida en código antes de escribir.
+     */
+    data: v.optional(v.any()),
     /**
      * Ventana de contexto para el agente: `{ role: "user"|"assistant", content }[]`.
      * Puede compactarse sin afectar el log inmutable en la tabla `messages` (UI).

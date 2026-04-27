@@ -151,7 +151,7 @@ export function AddNewCvPanel({
         onUploaded?.(newId);
         router.replace(`/my-cvs/${newId}`);
 
-        appendLog("Generando CV digital (Europass) y leyendo el PDF…");
+        appendLog("Generando resumen estructurado (Europass) a partir del PDF…");
         setProgress(58);
 
         clearEnrichProgressTimer();

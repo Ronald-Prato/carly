@@ -133,6 +133,7 @@ export const getLatestFullRecord = query({
       updatedAt: row.updatedAt ?? null,
       enrichmentStatus: row.enrichmentStatus ?? null,
       enrichmentError: row.enrichmentError ?? null,
+      templateId: row.templateId ?? null,
       downloadUrl: downloadUrl ?? null,
     };
   },
@@ -218,6 +219,8 @@ export const getById = query({
       fileName: row.fileName,
       title: row.title ?? titleFromFileName(row.fileName),
       content: row.content,
+      data: row.data ?? null,
+      templateId: row.templateId,
       uploadedAt: row.uploadedAt,
       updatedAt: row.updatedAt ?? row.uploadedAt,
       enrichmentStatus: row.enrichmentStatus,

@@ -76,8 +76,10 @@ export const patch = mutation({
     conversationId: v.id("conversations"),
     title: v.optional(v.string()),
     messages: v.optional(v.array(v.any())),
-    /** Resume/CV draft for this conversation (replaces the previous value). */
+    /** Borrador en Markdown (resumen del CV). Reemplaza el valor previo. */
     content: v.optional(v.string()),
+    /** Borrador estructurado (CvData). Reemplaza el valor previo. */
+    data: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
     const userId = await requireUserId(ctx);
@@ -89,6 +91,7 @@ export const patch = mutation({
       title?: string;
       messages?: unknown[];
       content?: string;
+      data?: unknown;
       updatedAt: number;
     } = { updatedAt: Date.now() };
     if (args.title !== undefined) {
@@ -100,6 +103,9 @@ export const patch = mutation({
     }
     if (args.content !== undefined) {
       patch.content = args.content;
+    }
+    if (args.data !== undefined) {
+      patch.data = args.data;
     }
     await ctx.db.patch(args.conversationId, patch);
   },

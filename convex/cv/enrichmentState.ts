@@ -27,7 +27,11 @@ export const applySuccess = internalMutation({
   args: {
     resumeId: v.id("resumes"),
     userId: v.id("users"),
-    content: v.string(),
+    /** HTML cacheado (legado o generado por la plantilla). */
+    content: v.optional(v.string()),
+    /** Datos estructurados (CvData). Validado en código por la action. */
+    data: v.optional(v.any()),
+    templateId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const row = await ctx.db.get("resumes", args.resumeId);
@@ -36,7 +40,9 @@ export const applySuccess = internalMutation({
     }
     const now = Date.now();
     await ctx.db.patch(args.resumeId, {
-      content: args.content,
+      ...(args.content !== undefined ? { content: args.content } : {}),
+      ...(args.data !== undefined ? { data: args.data } : {}),
+      ...(args.templateId !== undefined ? { templateId: args.templateId } : {}),
       enrichmentStatus: "ready",
       enrichmentError: undefined,
       updatedAt: now,
