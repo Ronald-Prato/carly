@@ -11,15 +11,60 @@ export type CarlyRunContext = {
   conversationId?: Id<"conversations">;
 };
 
-const fetchUserResumeRecordDescription = `**When to use (high priority):** call this by default whenever the user asks anything that could be answered from their CV / résumé data.
+const searchResumeByKeywordsDescription = `**When to use (default for CV questions):** call this first whenever the user asks something that could be answered from their stored CV / résumé, unless you already know you need the **entire** HTML body.
 
-**Always call this first** before asking the user to paste their CV again when the request is about: years of experience, career summary, work history, skills, education, achievements, profile/about section, or "what do you know from my CV?".
+**How to use:** pass \`terms\`: 3–10 short keywords or short phrases taken from the user message (companies, roles, skills, degrees, cities, technologies). Example: user asks about React experience → \`terms: ["react", "frontend", "desarrollador"]\`. Prefer distinct tokens over one long sentence.
 
-**Trigger examples:** "cuántos años de experiencia tengo", "resúmeme mi CV", "qué dice mi hoja de vida", "qué skills tengo ahí", "qué puedo mejorar en mi CV", "según mi experiencia laboral...".
+**What it does:** searches the latest stored resume as **plain text** (substring match, case-insensitive) and returns **small excerpts** around hits—like \`grep -C\`. No full CV content in the response.
 
-Only skip this tool if the user is explicitly talking about information that clearly is not in the stored CV.
+**If snippets are empty:** widen or change \`terms\`, or try \`fetch_user_resume_record\` only if you need the full document.`;
 
-**What it does:** loads the **full latest resume row** from the database for the signed-in user (all stored fields, optional HTML/text content, enrichment metadata, PDF download URL when available). This is **not** the conversation draft; use the update-draft tool for chat-linked edits.`;
+/** Single property \`terms\` so the tool JSON schema stays valid for providers that require every key in \`required\`. */
+const searchResumeByKeywordsParameters = z.object({
+  terms: z
+    .array(z.string().min(2).max(200))
+    .min(1)
+    .max(12)
+    .describe(
+      "Keywords or short phrases to find in the resume (2–200 chars each, max 12).",
+    ),
+});
+
+export const searchResumeByKeywordsTool = tool({
+  name: "search_resume_by_keywords",
+  description: searchResumeByKeywordsDescription,
+  parameters: searchResumeByKeywordsParameters,
+  isEnabled: async ({ runContext }) => {
+    const c = runContext.context as CarlyRunContext | undefined;
+    return Boolean(c?.convexToken);
+  },
+  execute: async (input, runContext) => {
+    const ctx = runContext?.context as CarlyRunContext | undefined;
+    if (!ctx?.convexToken) {
+      return "Could not search resume: missing session.";
+    }
+    try {
+      const result = await fetchQuery(
+        api.storage.resume.searchLatestResumeContent,
+        {
+          terms: input.terms,
+          matchMode: "any",
+        },
+        { token: ctx.convexToken },
+      );
+      return JSON.stringify(result, null, 2);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Unknown error";
+      return `Could not search resume: ${msg}`;
+    }
+  },
+});
+
+const fetchUserResumeRecordDescription = `**When to use:** only when you need the **complete** latest resume row (full HTML \`content\`, every DB field, PDF URL)—for example a **full rewrite** of the CV, or after \`search_resume_by_keywords\` returned too little and you must read the whole body.
+
+**Do not use as the first step** for typical questions (experience, skills, jobs, education): use \`search_resume_by_keywords\` with extracted \`terms\` instead so context stays small.
+
+**What it does:** loads the **full latest resume** for the signed-in user. Not the conversation draft; use the update-draft tool for chat-linked edits.`;
 
 const fetchUserResumeRecordParameters = z.object({});
 

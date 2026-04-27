@@ -17,6 +17,7 @@ import type * as database_profiles from "../database/profiles.js";
 import type * as database_tasks from "../database/tasks.js";
 import type * as database_users from "../database/users.js";
 import type * as storage_resume from "../storage/resume.js";
+import type * as storage_resumeSearchHelpers from "../storage/resumeSearchHelpers.js";
 
 import type {
   ApiFromModules,
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   "database/tasks": typeof database_tasks;
   "database/users": typeof database_users;
   "storage/resume": typeof storage_resume;
+  "storage/resumeSearchHelpers": typeof storage_resumeSearchHelpers;
 }>;
 
 /**

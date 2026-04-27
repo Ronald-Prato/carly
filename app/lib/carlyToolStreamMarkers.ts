@@ -55,6 +55,8 @@ export function stripCarlyToolMarkers(text: string): string {
 /** Etiquetas cortas en español para el log en la conversación. */
 export function getCarlyToolLogLabel(toolName: string): string {
   switch (toolName) {
+    case "search_resume_by_keywords":
+      return "Buscaste en tu CV";
     case "fetch_user_resume_record":
       return "Consultaste tu CV";
     case "update_conversation_resume_draft":

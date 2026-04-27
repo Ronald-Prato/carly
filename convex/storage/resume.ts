@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { Id } from "../_generated/dataModel";
 import { mutation, query } from "../_generated/server";
+import { htmlToPlainText, searchResumePlainText } from "./resumeSearchHelpers";
 import { getUserIdForQuery, requireUserId } from "../database/users";
 
 type StorageMeta = {
@@ -30,6 +31,81 @@ function assertPdf(metadata: StorageMeta): void {
  * Latest `resumes` row for the current user with every persisted field plus a PDF URL.
  * For agent tools that need the full DB record (not the conversation draft).
  */
+const MAX_SEARCH_TERMS = 12;
+
+/**
+ * Latest resume for the user: keyword windows over extracted plain text (grep-style, no vectors).
+ */
+export const searchLatestResumeContent = query({
+  args: {
+    terms: v.array(v.string()),
+    matchMode: v.union(v.literal("any"), v.literal("all")),
+    contextChars: v.optional(v.number()),
+    maxSnippets: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getUserIdForQuery(ctx);
+    if (!userId) {
+      return { ok: false as const, reason: "no_resume" as const };
+    }
+    const rows = await ctx.db
+      .query("resumes")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
+    if (rows.length === 0) {
+      return { ok: false as const, reason: "no_resume" as const };
+    }
+    const row = rows.reduce((a, b) => (a.uploadedAt >= b.uploadedAt ? a : b));
+    const downloadUrl = (await ctx.storage.getUrl(row.storageId)) ?? null;
+    const resumeTitle = row.title ?? titleFromFileName(row.fileName);
+    const enrichmentStatus = row.enrichmentStatus ?? null;
+
+    const content = row.content?.trim() ?? "";
+    if (!content) {
+      return {
+        ok: false as const,
+        reason: "content_not_ready" as const,
+        resumeTitle,
+        enrichmentStatus,
+        downloadUrl,
+      };
+    }
+
+    const terms = args.terms.slice(0, MAX_SEARCH_TERMS);
+    const plain = htmlToPlainText(content);
+    const contextChars =
+      args.contextChars === undefined
+        ? undefined
+        : Math.min(400, Math.max(50, Math.floor(args.contextChars)));
+    const maxSnippets =
+      args.maxSnippets === undefined
+        ? undefined
+        : Math.min(30, Math.max(1, Math.floor(args.maxSnippets)));
+    const inner = searchResumePlainText(plain, terms, {
+      matchMode: args.matchMode,
+      contextChars,
+      maxSnippets,
+    });
+
+    if (!inner.ok) {
+      return { ok: false as const, reason: "empty_terms" as const };
+    }
+
+    return {
+      ok: true as const,
+      resumeTitle,
+      enrichmentStatus,
+      downloadUrl,
+      plainTextLength: plain.length,
+      snippets: inner.snippets,
+      matchedTerms: inner.matchedTerms,
+      missingTerms: inner.missingTerms,
+      truncated: inner.truncated,
+      matchMode: inner.matchMode,
+    };
+  },
+});
+
 export const getLatestFullRecord = query({
   args: {},
   handler: async (ctx) => {

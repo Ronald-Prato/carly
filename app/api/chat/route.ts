@@ -23,6 +23,7 @@ import {
 } from "@/app/lib/carlyToolStreamMarkers";
 import {
   fetchUserResumeRecordTool,
+  searchResumeByKeywordsTool,
   updateConversationResumeDraftTool,
   type CarlyRunContext,
 } from "@/app/lib/carlyTools";
@@ -232,7 +233,11 @@ export async function POST(request: Request) {
       "Carly assistant: job search and keeping the user’s career narrative up to date",
     instructions: CARLY_INSTRUCTIONS,
     model: MODEL,
-    tools: [fetchUserResumeRecordTool, updateConversationResumeDraftTool],
+    tools: [
+      searchResumeByKeywordsTool,
+      fetchUserResumeRecordTool,
+      updateConversationResumeDraftTool,
+    ],
   });
 
   const input = buildAgentInput(messages);
