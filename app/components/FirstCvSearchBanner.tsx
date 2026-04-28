@@ -26,6 +26,7 @@ export function FirstCvSearchBanner() {
     resumeRows.length > 0 &&
     enrichmentReady &&
     profile !== undefined &&
+    profile !== null &&
     profile.hasUploadedFirstCV !== true;
 
   const onAcknowledge = useCallback(() => {

@@ -43,6 +43,8 @@ export function CvTabOnboarding({
       setCoords(null);
       return;
     }
+    /** Tarjeta aún no montada (portal); el siguiente frame volverá a llamar a updatePosition. */
+    if (!card) return;
 
     /** Espacio mínimo entre el ítem «Mi CV» y la tarjeta; el triángulo ocupa parte del hueco. */
     const gap = 4;
