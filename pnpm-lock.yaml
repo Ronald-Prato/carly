@@ -20,6 +20,9 @@ importers:
       '@openai/agents':
         specifier: ^0.8.5
         version: 0.8.5(ws@8.20.0)(zod@4.3.6)
+      '@openai/agents-core':
+        specifier: ^0.8.5
+        version: 0.8.5(ws@8.20.0)(zod@4.3.6)
       '@upstash/redis':
         specifier: ^1.37.0
         version: 1.37.0
