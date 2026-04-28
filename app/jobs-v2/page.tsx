@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { useCvUploadGate } from "@/lib/hooks/useCvUploadGate";
 import { DEFAULT_JOB_SEARCH_DEFAULTS } from "@/lib/linkedin/jobsList";
 import {
   JOB_SEARCH_COUNTRY_OPTIONS,
@@ -10,6 +11,7 @@ import {
 } from "@/lib/linkedin/jobSearchOptions";
 
 export default function JobsV2Page() {
+  const { accessAllowed } = useCvUploadGate();
   const searchJobsV2 = useAction(api.jobs.jobsV2Search.searchJobsV2);
   const [keywords, setKeywords] = useState("");
   const [country, setCountry] = useState<JobSearchCountryCode>(
@@ -43,6 +45,14 @@ export default function JobsV2Page() {
       setLoading(false);
     }
   }, [keywords, country, searchJobsV2]);
+
+  if (!accessAllowed) {
+    return (
+      <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center px-4 py-16">
+        <p className="text-sm text-[var(--carly-muted)]">Cargando…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col px-4 py-8 sm:px-6">

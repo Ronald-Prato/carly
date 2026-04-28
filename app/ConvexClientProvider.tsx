@@ -17,7 +17,12 @@ const convex = new ConvexReactClient(convexUrl);
 
 export function ConvexClientProvider({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="light"
+      enableSystem={false}
+      storageKey="carly-theme"
+    >
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <EnsureConvexUser>
           {children}

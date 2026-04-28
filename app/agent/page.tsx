@@ -9,6 +9,7 @@ import { ChatPanel } from "../components/chat/ChatPanel";
 import type { ChatMessage } from "../components/chat/types";
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
+import { useCvUploadGate } from "@/lib/hooks/useCvUploadGate";
 import { AGENT_PATH } from "@/lib/routes";
 
 function mapMessageDoc(m: Doc<"messages">): ChatMessage {
@@ -23,6 +24,7 @@ function AgentPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const convInUrl = searchParams.get("conv");
+  const { accessAllowed } = useCvUploadGate();
   const { isSignedIn } = useAuth();
   const resume = useQuery(api.storage.resume.get);
   const cvReady = Boolean(
@@ -126,6 +128,10 @@ function AgentPageContent() {
     cvReady && !resumeLoading && displayMessages.length === 0
       ? "¿Qué quieres que hagamos hoy con tu CV?"
       : undefined;
+
+  if (!accessAllowed) {
+    return <AgentFallback />;
+  }
 
   return (
     <div className="flex h-dvh min-h-0 bg-[var(--carly-page-bg)] text-[var(--carly-text)] antialiased">

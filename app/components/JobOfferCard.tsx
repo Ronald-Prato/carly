@@ -17,14 +17,13 @@ import {
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
 } from "react";
-import { createPortal } from "react-dom";
-import type { ComponentType, RefObject } from "react";
+import type { ComponentType } from "react";
 import type { EnrichedJobCard } from "@/lib/jobs/enrichedJobCard";
 import { cn } from "@/lib/utils";
+import { PointerTooltipPortal } from "./PointerTooltip";
 
 function formatLinkedInEpoch(value: number | null): string | null {
   if (value == null) {
@@ -59,64 +58,6 @@ const STAT_ROW_TOOLTIPS = {
   easyApply:
     "Si LinkedIn ofrece un envío rápido de candidatura (tipo «Solicitud sencilla» / Easy Apply) desde la misma página.",
 } as const;
-
-function TooltipPortal({
-  text,
-  open,
-  anchorRef,
-}: {
-  text: string;
-  open: boolean;
-  anchorRef: RefObject<HTMLElement | null>;
-}) {
-  const [pos, setPos] = useState({ left: 0, top: 0 });
-
-  const syncPosition = useCallback(() => {
-    const el = anchorRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    setPos({ left: r.left + r.width / 2, top: r.top });
-  }, [anchorRef]);
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    syncPosition();
-  }, [open, syncPosition]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onMove = () => syncPosition();
-    window.addEventListener("scroll", onMove, true);
-    window.addEventListener("resize", onMove);
-    return () => {
-      window.removeEventListener("scroll", onMove, true);
-      window.removeEventListener("resize", onMove);
-    };
-  }, [open, syncPosition]);
-
-  if (!open || typeof document === "undefined") return null;
-
-  return createPortal(
-    <div
-      role="tooltip"
-      style={{
-        position: "fixed",
-        left: pos.left,
-        top: pos.top,
-        transform: "translate(-50%, calc(-100% - 10px))",
-        zIndex: 10000,
-      }}
-      className={cn(
-        "pointer-events-none w-max max-w-[min(280px,calc(100vw-2rem))]",
-        "rounded-md border border-slate-700/90 bg-slate-900 px-2.5 py-1.5 text-center text-[11px] leading-snug font-normal text-white shadow-xl",
-        "dark:border-zinc-600 dark:bg-zinc-800",
-      )}
-    >
-      {text}
-    </div>,
-    document.body,
-  );
-}
 
 function StatPill({
   icon: Icon,
@@ -154,7 +95,7 @@ function StatPill({
       >
         <Icon className="pointer-events-none size-5" aria-hidden />
       </button>
-      <TooltipPortal text={tooltip} open={open} anchorRef={triggerRef} />
+      <PointerTooltipPortal text={tooltip} open={open} anchorRef={triggerRef} />
       <span className="truncate text-sm text-[var(--carly-muted)]">
         {value}
       </span>
@@ -317,7 +258,7 @@ export function JobOfferCard({
                   aria-hidden
                 />
               </button>
-              <TooltipPortal
+              <PointerTooltipPortal
                 text={saveTooltipLabel}
                 open={saveTooltipOpen}
                 anchorRef={saveBtnRef}

@@ -31,6 +31,7 @@ import {
   type JobSearchCountryCode,
 } from "@/lib/linkedin/jobSearchOptions";
 import { cn } from "@/lib/utils";
+import { useCvUploadGate } from "@/lib/hooks/useCvUploadGate";
 
 const MATCH_WIZARD_STEPS = [
   "Explorando oportunidades para ti",
@@ -209,6 +210,7 @@ function JobsSlideshow({
 }
 
 export default function JobsPage() {
+  const { accessAllowed } = useCvUploadGate();
   const matchJobsWithCvAction = useAction(
     api.jobs.matchJobsWithCv.matchJobsWithCv,
   );
@@ -315,6 +317,14 @@ export default function JobsPage() {
   const showJobCarousel = hasMatchesFound && offersUnlocked;
   const showWizardOverlay = loading && wizardPhase !== null;
   const showNoMatchesGate = jobs !== null && jobs.length === 0 && !loading;
+
+  if (!accessAllowed) {
+    return (
+      <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center px-4 py-16">
+        <p className="text-sm text-[var(--carly-muted)]">Cargando…</p>
+      </div>
+    );
+  }
 
   return (
     <div

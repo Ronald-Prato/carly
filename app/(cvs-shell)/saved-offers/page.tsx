@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
@@ -15,8 +16,15 @@ import {
 } from "@/components/ui/dialog";
 import { api } from "@/convex/_generated/api";
 import type { EnrichedJobCard } from "@/lib/jobs/enrichedJobCard";
+import { useCvUploadGate } from "@/lib/hooks/useCvUploadGate";
 
 export default function SavedOffersPage() {
+  const { accessAllowed } = useCvUploadGate();
+  const { isSignedIn } = useAuth();
+  const resumeRows = useQuery(
+    api.storage.resume.list,
+    isSignedIn ? {} : "skip",
+  );
   const rows = useQuery(api.savedJobOffers.list, {});
   const removeOffer = useMutation(api.savedJobOffers.remove);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -74,6 +82,18 @@ export default function SavedOffersPage() {
 
   const loading = rows === undefined;
   const empty = rows !== undefined && rows.length === 0;
+  const showIrEmpleosCta =
+    empty &&
+    resumeRows !== undefined &&
+    resumeRows.length > 0;
+
+  if (!accessAllowed) {
+    return (
+      <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center px-4 py-16">
+        <p className="text-sm text-[var(--carly-muted)]">Cargando…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col px-4 py-8 sm:px-6">
@@ -100,12 +120,14 @@ export default function SavedOffersPage() {
               empleos, pulsa el icono de marcador junto a «Ver oferta» para
               guardarla aquí.
             </p>
-            <Link
-              href="/jobs"
-              className="mt-8 inline-flex min-w-[200px] items-center justify-center rounded-[12px] bg-[var(--carly-primary-bg)] px-6 py-3 text-sm font-semibold text-[var(--carly-primary-fg)] shadow-sm transition hover:bg-[var(--carly-primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--carly-primary-bg)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--carly-page-bg)]"
-            >
-              Ir a Empleos
-            </Link>
+            {showIrEmpleosCta ? (
+              <Link
+                href="/jobs"
+                className="mt-8 inline-flex min-w-[200px] items-center justify-center rounded-[12px] bg-[var(--carly-primary-bg)] px-6 py-3 text-sm font-semibold text-[var(--carly-primary-fg)] shadow-sm transition hover:bg-[var(--carly-primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--carly-primary-bg)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--carly-page-bg)]"
+              >
+                Ir a Empleos
+              </Link>
+            ) : null}
           </div>
         ) : (
           <div className="flex flex-col gap-6">

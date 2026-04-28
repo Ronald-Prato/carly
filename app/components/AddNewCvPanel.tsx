@@ -119,7 +119,6 @@ export function AddNewCvPanel({
       setLogLines([]);
       setPhase("processing");
       setError(null);
-      const toastId = "cv-import";
 
       try {
         appendLog("Preparando envío…");
@@ -159,23 +158,13 @@ export function AddNewCvPanel({
           setProgress((p) => (p < 90 ? p + 1 : p));
         }, 350);
 
-        toast.loading("Procesando tu hoja de vida…", { id: toastId });
         const enrich = await enrichFromPdf({ resumeId: newId });
         clearEnrichProgressTimer();
         setProgress(100);
-        appendLog("Listo. Tu CV está guardado.");
 
-        if (enrich?.ok) {
-          toast.success("Hoja de vida importada con éxito", {
-            id: toastId,
-            description: "PDF guardado y CV digital (HTML) generado correctamente.",
-          });
-        } else {
-          toast.warning("PDF guardado; aviso de análisis", {
-            id: toastId,
-            description:
-              enrich?.error ??
-              "No se pudo generar el HTML automáticamente. Puedes reintentar desde el detalle.",
+        if (!enrich?.ok && enrich?.error) {
+          toast.error("No se completó el análisis automático", {
+            description: enrich.error,
           });
         }
         resetFlow();
@@ -185,7 +174,6 @@ export function AddNewCvPanel({
           err instanceof Error
             ? err.message
             : "No se pudo subir la hoja de vida.";
-        toast.dismiss(toastId);
         setError(message);
         toast.error("Error al subir", { description: message });
         setProgress(0);

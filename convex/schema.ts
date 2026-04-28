@@ -67,6 +67,10 @@ export default defineSchema({
     yearsOfExperience: v.optional(v.number()),
     expectedSalary: v.optional(v.number()),
     location: v.optional(v.string()),
+    /** Tour inicial (sidebar «Mi CV»). `undefined` en documentos previos = pendiente. */
+    hasDoneWT: v.optional(v.boolean()),
+    /** Toast «primer CV» ya mostrado/cerrado; en `true` no volver a mostrar. */
+    hasUploadedFirstCV: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_userId", ["userId"]),

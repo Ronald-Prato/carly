@@ -13,6 +13,7 @@ import {
   SquarePen,
 } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import {
   useCallback,
   useEffect,
@@ -20,16 +21,19 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTheme } from "next-themes";
 import { usePathname } from "next/navigation";
+import { HoverTooltip } from "./PointerTooltip";
+import { CvTabOnboarding } from "./CvTabOnboarding";
 import { AuthStatus } from "./AuthStatus";
 import { ConversationListSkeleton } from "./loading-skeletons";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { CV_REQUIRED_TOOLTIP } from "@/lib/cvGate";
 import { AGENT_PATH } from "@/lib/routes";
 import { cn } from "@/lib/utils";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 
-const THEME_KEY = "carly-theme";
 const SIDEBAR_COLLAPSED_KEY = "carly-sidebar-collapsed";
 
 /** En false, se ocultan Agente, Nuevo chat y conversaciones. */
@@ -42,8 +46,6 @@ const SIDEBAR_TRANSITION =
   "transition-[width] duration-300 ease-in-out motion-reduce:transition-none";
 /** Debe coincidir con duration-300 + margen para transitionend con motion-reduce */
 const WIDTH_TRANSITION_MS = 300;
-
-type Theme = "light" | "dark";
 
 export type AppSidebarMode = "chat" | "cvs" | "home";
 
@@ -65,14 +67,83 @@ function iconBoxClass(active: boolean) {
   );
 }
 
+function SidebarNavRow({
+  href,
+  locked,
+  active,
+  showIconRail,
+  icon,
+  label,
+  marginClass = "mb-3",
+}: {
+  href: string;
+  locked: boolean;
+  active: boolean;
+  showIconRail: boolean;
+  icon: ReactNode;
+  label: string;
+  marginClass?: string;
+}) {
+  const base = cn(
+    marginClass,
+    "flex min-w-0 items-center rounded-[12px] py-2.5 text-left text-sm transition-colors",
+    showIconRail ? "w-full justify-center px-2" : "w-full gap-2.5 pl-2 pr-2",
+  );
+
+  const interactive = locked
+    ? "cursor-not-allowed opacity-[0.55] text-[var(--carly-nav-inactive-fg)]"
+    : active
+      ? "bg-[var(--carly-sidebar-active)] font-semibold text-[var(--carly-nav-active-text)] shadow-sm"
+      : "text-[var(--carly-nav-inactive-fg)] hover:bg-[var(--carly-row-hover)]";
+
+  const iconActive = locked ? false : active;
+
+  const inner = (
+    <>
+      <span className={iconBoxClass(iconActive)} aria-hidden>
+        {icon}
+      </span>
+      {!showIconRail && (
+        <span className="min-w-0 flex-1 truncate">{label}</span>
+      )}
+    </>
+  );
+
+  if (locked) {
+    return (
+      <HoverTooltip
+        content={CV_REQUIRED_TOOLTIP}
+        role="link"
+        aria-disabled="true"
+        className={cn(base, interactive)}
+      >
+        {inner}
+      </HoverTooltip>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      title={showIconRail ? label : undefined}
+      aria-current={active ? "page" : undefined}
+      className={cn(base, interactive)}
+    >
+      {inner}
+    </Link>
+  );
+}
+
 function ThemeSwitchPill({
   checked,
   onToggle,
   title,
+  disabled,
 }: {
   checked: boolean;
   onToggle: () => void;
   title?: string;
+  disabled?: boolean;
 }) {
   return (
     <button
@@ -80,9 +151,10 @@ function ThemeSwitchPill({
       role="switch"
       aria-checked={checked}
       title={title}
+      disabled={disabled}
       onClick={onToggle}
       className={cn(
-        "relative inline-flex h-7 w-[3.25rem] shrink-0 rounded-full px-px transition-colors duration-300 ease-in-out motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--carly-primary-bg)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--carly-sidebar-bg)]",
+        "relative inline-flex h-7 w-[3.25rem] shrink-0 rounded-full px-px transition-colors duration-300 ease-in-out motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--carly-primary-bg)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--carly-sidebar-bg)] disabled:pointer-events-none disabled:opacity-50",
         checked ? "bg-violet-600" : "bg-slate-200 dark:bg-zinc-600",
       )}
     >
@@ -118,6 +190,7 @@ export function AppSidebar({
   /** Solo iconos / cabecera compacta — se sincroniza al terminar la animación de ancho. */
   const [railCollapsed, setRailCollapsed] = useState(false);
   const asideRef = useRef<HTMLElement>(null);
+  const cvNavAnchorRef = useRef<HTMLDivElement>(null);
   const widthAnimPendingRef = useRef<"collapse" | null>(null);
 
   useEffect(() => {
@@ -198,6 +271,27 @@ export function AppSidebar({
     api.storage.resume.list,
     isSignedIn ? {} : "skip",
   );
+  const profile = useQuery(
+    api.database.profiles.getCurrent,
+    isSignedIn ? {} : "skip",
+  );
+  const markWalkthroughDone = useMutation(
+    api.database.profiles.markWalkthroughDone,
+  );
+
+  /** Oculta el WT al instante; la mutación corre en segundo plano. */
+  const [cvWtDismissedOptimistic, setCvWtDismissedOptimistic] =
+    useState(false);
+
+  const dismissCvOnboarding = useCallback(() => {
+    setCvWtDismissedOptimistic(true);
+    void markWalkthroughDone();
+  }, [markWalkthroughDone]);
+
+  const lockAgentJobs =
+    !isSignedIn ||
+    resumeRows === undefined ||
+    resumeRows.length === 0;
 
   const cvHref = useMemo(() => {
     if (!isSignedIn || resumeRows === undefined) {
@@ -209,31 +303,31 @@ export function AppSidebar({
     return "/my-cvs";
   }, [isSignedIn, resumeRows]);
 
-  const [theme, setTheme] = useState<Theme>("light");
-
+  const { resolvedTheme, setTheme } = useTheme();
+  const [themeMounted, setThemeMounted] = useState(false);
   useEffect(() => {
-    const saved = localStorage.getItem(THEME_KEY);
-    const initial: Theme = saved === "dark" ? "dark" : "light";
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- theme from localStorage after mount to avoid hydration mismatch
-    setTheme(initial);
-    document.documentElement.classList.toggle("dark", initial === "dark");
+    setThemeMounted(true);
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setTheme((prev) => {
-      const next: Theme = prev === "dark" ? "light" : "dark";
-      document.documentElement.classList.toggle("dark", next === "dark");
-      localStorage.setItem(THEME_KEY, next);
-      return next;
-    });
-  }, []);
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  }, [resolvedTheme, setTheme]);
 
-  const isDark = theme === "dark";
+  const isDark = themeMounted && resolvedTheme === "dark";
   const listLoadingConversations =
     isSignedIn && showChatChrome && conversationRows === undefined;
 
   /** Modo rail solo-iconos estable: solo con ancho estrecho y tras terminar la animación de colapso (al expandir, layout completo antes de que crezca el aside). */
   const showIconRail = railCollapsed && widthCollapsed;
+
+  const showCvTabOnboarding =
+    isSignedIn &&
+    !showIconRail &&
+    !cvWtDismissedOptimistic &&
+    resumeRows !== undefined &&
+    resumeRows.length === 0 &&
+    profile !== undefined &&
+    profile?.hasDoneWT !== true;
 
   return (
     <aside
@@ -262,35 +356,20 @@ export function AppSidebar({
               </Link>
             </h1>
             <div className="flex shrink-0 items-center gap-2">
-              {SHOW_AGENT_IN_SIDEBAR && mode !== "home" ? (
-                mode === "cvs" ? (
-                  <Link
-                    href={AGENT_PATH}
-                    title="Nuevo chat"
-                    aria-label="Nuevo chat"
-                    className="inline-flex size-8 shrink-0 items-center justify-center rounded-[8px] bg-[var(--carly-primary-bg)] text-[var(--carly-primary-fg)] shadow-sm transition hover:bg-[var(--carly-primary-hover)] active:scale-[0.98] active:bg-[var(--carly-primary-active)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--carly-primary-bg)]"
-                  >
-                    <SquarePen
-                      className="size-4 shrink-0"
-                      strokeWidth={2}
-                      aria-hidden
-                    />
-                  </Link>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={onNewChat}
-                    title="Nuevo chat"
-                    aria-label="Nuevo chat"
-                    className="inline-flex size-8 shrink-0 items-center justify-center rounded-[8px] bg-[var(--carly-primary-bg)] text-[var(--carly-primary-fg)] shadow-sm transition hover:bg-[var(--carly-primary-hover)] active:scale-[0.98] active:bg-[var(--carly-primary-active)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--carly-primary-bg)]"
-                  >
-                    <SquarePen
-                      className="size-4 shrink-0"
-                      strokeWidth={2}
-                      aria-hidden
-                    />
-                  </button>
-                )
+              {SHOW_AGENT_IN_SIDEBAR && agentActive ? (
+                <button
+                  type="button"
+                  onClick={onNewChat}
+                  title="Nuevo chat"
+                  aria-label="Nuevo chat"
+                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-[8px] bg-[var(--carly-primary-bg)] text-[var(--carly-primary-fg)] shadow-sm transition hover:bg-[var(--carly-primary-hover)] active:scale-[0.98] active:bg-[var(--carly-primary-active)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--carly-primary-bg)]"
+                >
+                  <SquarePen
+                    className="size-4 shrink-0"
+                    strokeWidth={2}
+                    aria-hidden
+                  />
+                </button>
               ) : null}
             <button
               type="button"
@@ -354,87 +433,59 @@ export function AppSidebar({
             )}
           </Link>
 
-          {SHOW_AGENT_IN_SIDEBAR ? (
+          <div ref={cvNavAnchorRef} className="relative mb-3">
             <Link
-              href={AGENT_PATH}
-              title={showIconRail ? "Agente" : undefined}
-              aria-current={agentActive ? "page" : undefined}
+              href={cvHref}
+              title={showIconRail ? "Mi CV" : undefined}
+              aria-current={cvsActive ? "page" : undefined}
               className={cn(
-                "mb-2 flex min-w-0 items-center rounded-[12px] py-2.5 text-left text-sm transition-colors",
+                "flex min-w-0 items-center rounded-[12px] py-2.5 text-left text-sm transition-colors",
                 showIconRail ? "w-full justify-center px-2" : "w-full gap-2.5 pl-2 pr-2",
-                agentActive
+                cvsActive
                   ? "bg-[var(--carly-sidebar-active)] font-semibold text-[var(--carly-nav-active-text)] shadow-sm"
                   : "text-[var(--carly-nav-inactive-fg)] hover:bg-[var(--carly-row-hover)]",
               )}
             >
-              <span className={iconBoxClass(agentActive)} aria-hidden>
-                <Bot className="size-4" strokeWidth={2.25} />
+              <span className={iconBoxClass(cvsActive)} aria-hidden>
+                <FileText className="size-4" strokeWidth={2.25} />
               </span>
               {!showIconRail && (
-                <span className="min-w-0 flex-1 truncate">Agente</span>
+                <span className="min-w-0 flex-1 truncate">Mi CV</span>
               )}
             </Link>
+          </div>
+
+          {SHOW_AGENT_IN_SIDEBAR ? (
+            <SidebarNavRow
+              href={AGENT_PATH}
+              locked={lockAgentJobs}
+              active={agentActive}
+              showIconRail={showIconRail}
+              icon={<Bot className="size-4" strokeWidth={2.25} />}
+              label="Agente"
+              marginClass="mb-3"
+            />
           ) : null}
 
-          <Link
-            href={cvHref}
-            title={showIconRail ? "Mi CV" : undefined}
-            aria-current={cvsActive ? "page" : undefined}
-            className={cn(
-              "mb-3 flex min-w-0 items-center rounded-[12px] py-2.5 text-left text-sm transition-colors",
-              showIconRail ? "w-full justify-center px-2" : "w-full gap-2.5 pl-2 pr-2",
-              cvsActive
-                ? "bg-[var(--carly-sidebar-active)] font-semibold text-[var(--carly-nav-active-text)] shadow-sm"
-                : "text-[var(--carly-nav-inactive-fg)] hover:bg-[var(--carly-row-hover)]",
-            )}
-          >
-            <span className={iconBoxClass(cvsActive)} aria-hidden>
-              <FileText className="size-4" strokeWidth={2.25} />
-            </span>
-            {!showIconRail && (
-              <span className="min-w-0 flex-1 truncate">Mi CV</span>
-            )}
-          </Link>
-
-          <Link
+          <SidebarNavRow
             href="/jobs"
-            title={showIconRail ? "Empleos" : undefined}
-            aria-current={jobsActive ? "page" : undefined}
-            className={cn(
-              "mb-3 flex min-w-0 items-center rounded-[12px] py-2.5 text-left text-sm transition-colors",
-              showIconRail ? "w-full justify-center px-2" : "w-full gap-2.5 pl-2 pr-2",
-              jobsActive
-                ? "bg-[var(--carly-sidebar-active)] font-semibold text-[var(--carly-nav-active-text)] shadow-sm"
-                : "text-[var(--carly-nav-inactive-fg)] hover:bg-[var(--carly-row-hover)]",
-            )}
-          >
-            <span className={iconBoxClass(jobsActive)} aria-hidden>
-              <Briefcase className="size-4" strokeWidth={2.25} />
-            </span>
-            {!showIconRail && (
-              <span className="min-w-0 flex-1 truncate">Empleos</span>
-            )}
-          </Link>
+            locked={lockAgentJobs}
+            active={jobsActive}
+            showIconRail={showIconRail}
+            icon={<Briefcase className="size-4" strokeWidth={2.25} />}
+            label="Empleos"
+            marginClass="mb-3"
+          />
 
-          <Link
+          <SidebarNavRow
             href="/saved-offers"
-            title={showIconRail ? "Ofertas guardadas" : undefined}
-            aria-current={savedOffersActive ? "page" : undefined}
-            className={cn(
-              "mb-3 flex min-w-0 items-center rounded-[12px] py-2.5 text-left text-sm transition-colors",
-              showIconRail ? "w-full justify-center px-2" : "w-full gap-2.5 pl-2 pr-2",
-              savedOffersActive
-                ? "bg-[var(--carly-sidebar-active)] font-semibold text-[var(--carly-nav-active-text)] shadow-sm"
-                : "text-[var(--carly-nav-inactive-fg)] hover:bg-[var(--carly-row-hover)]",
-            )}
-          >
-            <span className={iconBoxClass(savedOffersActive)} aria-hidden>
-              <Bookmark className="size-4" strokeWidth={2.25} />
-            </span>
-            {!showIconRail && (
-              <span className="min-w-0 flex-1 truncate">Ofertas guardadas</span>
-            )}
-          </Link>
+            locked={lockAgentJobs}
+            active={savedOffersActive}
+            showIconRail={showIconRail}
+            icon={<Bookmark className="size-4" strokeWidth={2.25} />}
+            label="Ofertas guardadas"
+            marginClass="mb-3"
+          />
         </div>
 
         {showChatChrome ? (
@@ -562,7 +613,11 @@ export function AppSidebar({
               <Moon className="size-4 shrink-0 text-[var(--carly-muted)]" strokeWidth={2.25} />
               <span>Modo oscuro</span>
             </span>
-            <ThemeSwitchPill checked={isDark} onToggle={toggleTheme} />
+            <ThemeSwitchPill
+              checked={isDark}
+              onToggle={toggleTheme}
+              disabled={!themeMounted}
+            />
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">
@@ -574,12 +629,36 @@ export function AppSidebar({
             <ThemeSwitchPill
               checked={isDark}
               onToggle={toggleTheme}
+              disabled={!themeMounted}
               title={isDark ? "Modo oscuro activo" : "Activar modo oscuro"}
             />
           </div>
         )}
+
+        <p
+          className={cn(
+            "text-center text-[11px] leading-snug text-[var(--carly-muted)]",
+            showIconRail && "px-0.5",
+          )}
+        >
+          Hecho con ❤️ por{" "}
+          <Link
+            href="https://github.com/Ronald-Prato"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-[var(--carly-nav-active-text)] underline-offset-2 hover:underline"
+          >
+            Ronald Prato
+          </Link>
+        </p>
       </div>
       </div>
+
+      <CvTabOnboarding
+        open={Boolean(showCvTabOnboarding)}
+        anchorRef={cvNavAnchorRef}
+        onDismiss={dismissCvOnboarding}
+      />
     </aside>
   );
 }

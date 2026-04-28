@@ -4,6 +4,7 @@ import { Authenticated, Unauthenticated } from "convex/react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { AppSidebar } from "../components/AppSidebar";
+import { FirstCvSearchBanner } from "../components/FirstCvSearchBanner";
 
 type MyCvsLayoutClientProps = {
   children: ReactNode;
@@ -40,7 +41,12 @@ export function MyCvsLayoutClient({ children }: MyCvsLayoutClientProps) {
             </Link>
           </div>
         </Unauthenticated>
-        <Authenticated>{children}</Authenticated>
+        <Authenticated>
+          <>
+            <FirstCvSearchBanner />
+            {children}
+          </>
+        </Authenticated>
       </main>
     </div>
   );
