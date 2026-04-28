@@ -41,7 +41,7 @@ export default function MyCvsDetailPage() {
 
   if (list === undefined || (list.length > 0 && !isKnown)) {
     return (
-      <div className="flex min-h-0 flex-1 items-center justify-center text-sm text-[var(--carly-muted)]">
+      <div className="flex min-h-[50vh] w-full flex-1 items-center justify-center text-sm text-[var(--carly-muted)]">
         Cargando…
       </div>
     );
@@ -52,7 +52,7 @@ export default function MyCvsDetailPage() {
   }
 
   return (
-    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
+    <div className="relative flex w-full min-w-0 flex-col">
       <CvDetailPanel resumeId={resumeId} />
     </div>
   );

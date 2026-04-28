@@ -1,7 +1,8 @@
 "use client";
 
 /**
- * Genera y descarga un PDF a partir de `CvData` + plantilla.
+ * Genera y descarga un PDF a partir de `CvData` + plantilla, o de un HTML
+ * ya renderizado (`htmlOverride`, p. ej. el iframe del editor).
  *
  * Estrategia: renderizamos el HTML de la plantilla en un iframe oculto,
  * capturamos el `.cv-container` con html2canvas-pro y armamos un PDF jsPDF
@@ -18,12 +19,11 @@
  * el canvas completo a 210 mm); el hueco inferior de cada A4 queda en blanco.
  */
 
+import { CV_PAGE_WIDTH_PX as RENDER_WIDTH_PX, cvSheetHeightPx } from "./cvGeometry";
 import { renderCv } from "./registry";
 import type { CvData } from "./types";
 
 const A4_MM = { width: 210, height: 297 };
-/** Ancho de renderizado del documento en CSS pixels (coincide con `max-width: 1000px` del template). */
-const RENDER_WIDTH_PX = 1000;
 
 /** Solo la columna principal (sidebar ~30% izquierda en “clásica lateral”). */
 const SEAM_CONTENT_X_RATIO = 0.32;
@@ -146,6 +146,43 @@ type DocumentWithFonts = Document & {
   fonts?: { ready: Promise<unknown> };
 };
 
+/**
+ * Deja solo la hoja del CV para rasterizar: sin fondo gris del body, sin
+ * padding alrededor ni sombra del `.cv-container` (evita el “contenedor”
+ * en el PDF). También quita reglas del editor en vivo.
+ */
+function applyPdfPrintSurfaceStyling(doc: Document): void {
+  doc.querySelector("style[data-carly-editor]")?.remove();
+
+  const prev = doc.getElementById("carly-pdf-capture-surface");
+  prev?.remove();
+
+  const s = doc.createElement("style");
+  s.id = "carly-pdf-capture-surface";
+  s.textContent = `
+    html, body {
+      background: #ffffff !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    .cv-container {
+      box-shadow: none !important;
+      margin: 0 !important;
+      max-width: none !important;
+      width: ${RENDER_WIDTH_PX}px !important;
+      outline: none !important;
+    }
+  `;
+  doc.head.appendChild(s);
+
+  for (const el of doc.querySelectorAll<HTMLElement>(
+    ".cv-container[contenteditable]",
+  )) {
+    el.removeAttribute("contenteditable");
+    el.removeAttribute("spellcheck");
+  }
+}
+
 async function waitForIframeReady(iframe: HTMLIFrameElement): Promise<void> {
   const win = iframe.contentWindow;
   const doc = iframe.contentDocument as DocumentWithFonts | null;
@@ -171,6 +208,11 @@ export type DownloadCvAsPdfArgs = {
   templateId: string;
   /** Nombre del archivo SIN extensión. */
   fileName: string;
+  /**
+   * HTML completo del documento ya renderizado (p. ej. el iframe del editor).
+   * Si se omite, se vuelve a generar desde `data` y `templateId`.
+   */
+  htmlOverride?: string;
 };
 
 export async function downloadCvAsPdf(args: DownloadCvAsPdfArgs): Promise<void> {
@@ -178,7 +220,8 @@ export async function downloadCvAsPdf(args: DownloadCvAsPdfArgs): Promise<void> 
     throw new Error("downloadCvAsPdf solo puede ejecutarse en el cliente.");
   }
 
-  const html = renderCv(args.data, args.templateId);
+  const html =
+    args.htmlOverride?.trim() ?? renderCv(args.data, args.templateId);
 
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");
@@ -202,6 +245,7 @@ export async function downloadCvAsPdf(args: DownloadCvAsPdfArgs): Promise<void> 
     doc.close();
 
     await waitForIframeReady(iframe);
+    applyPdfPrintSurfaceStyling(doc);
 
     const target = doc.querySelector<HTMLElement>(".cv-container");
     if (!target) {
@@ -214,8 +258,7 @@ export async function downloadCvAsPdf(args: DownloadCvAsPdfArgs): Promise<void> 
      * la sidebar se extiende automáticamente hasta abajo en TODAS las páginas
      * (incluida la última, donde antes quedaba un hueco blanco).
      */
-    const pagePxAtRenderWidth =
-      (RENDER_WIDTH_PX * A4_MM.height) / A4_MM.width;
+    const pagePxAtRenderWidth = cvSheetHeightPx(RENDER_WIDTH_PX);
     const naturalHeight = Math.max(target.scrollHeight, 1);
     const pages = Math.max(1, Math.ceil(naturalHeight / pagePxAtRenderWidth));
     const paddedHeight = Math.round(pages * pagePxAtRenderWidth);

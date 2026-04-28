@@ -157,11 +157,9 @@ type CvTemplateCatalogCardProps = {
   srcDoc: string | null;
   /** Abre la vista previa modal con datos de ejemplo. */
   onPreview: () => void;
-  /** Aplica la plantilla al CV real y descarga PDF. */
+  /** Abre el editor visual con esta plantilla y los datos del CV. */
   onUse: () => void;
-  /** PDF en curso (ítem seleccionado). */
-  isGeneratingPdf: boolean;
-  /** Hay datos reales del CV disponibles para aplicar la plantilla. */
+  /** Hay datos reales del CV disponibles para abrir el editor. */
   canUse: boolean;
 };
 
@@ -170,7 +168,6 @@ export function CvTemplateCatalogCard({
   srcDoc,
   onPreview,
   onUse,
-  isGeneratingPdf,
   canUse,
 }: CvTemplateCatalogCardProps) {
   const live = Boolean(srcDoc);
@@ -289,7 +286,7 @@ export function CvTemplateCatalogCard({
             e.stopPropagation();
             onUse();
           }}
-          disabled={!live || !canUse || isGeneratingPdf}
+          disabled={!live || !canUse}
           className={cn(
             "inline-flex h-9 min-w-[6.5rem] items-center justify-center gap-2 rounded-[10px] px-3 text-xs font-semibold transition",
             "bg-violet-600 text-white hover:bg-violet-500",
@@ -298,14 +295,7 @@ export function CvTemplateCatalogCard({
             "focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500",
           )}
         >
-          {isGeneratingPdf ? (
-            <>
-              <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
-              <span>Generando…</span>
-            </>
-          ) : (
-            <span>Usar plantilla</span>
-          )}
+          <span>Usar plantilla</span>
         </button>
       </div>
     </article>

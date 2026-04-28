@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3035",
+    "dev": "next dev -p 3035 --webpack",
+    "dev:turbo": "next dev -p 3035",
     "dev:all": "convex dev --start 'npm run dev'",
     "build": "next build",
     "start": "next start -p 3035",
