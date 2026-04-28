@@ -1,23 +1,75 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-/** Lista lateral de conversaciones mientras carga la query. */
-export function ConversationListSkeleton({ className }: { className?: string }) {
+/** Alineado con cada fila de `AppSidebar` (cuadrado tipo icon-box + una línea de título). */
+const CONVERSATION_SKELETON_ROWS = 7;
+/** Anchuras relativas por fila para que no parezcan todas iguales. */
+const TITLE_LINE_MAX_WIDTH: readonly string[] = [
+  "max-w-[94%]",
+  "max-w-[78%]",
+  "max-w-[86%]",
+  "max-w-[71%]",
+  "max-w-[90%]",
+  "max-w-[65%]",
+  "max-w-[82%]",
+];
+
+export function ConversationListSkeleton({
+  className,
+  compact = false,
+}: {
+  className?: string;
+  /** Rail solo íconos: mismo patrón que conversaciones sin título visible. */
+  compact?: boolean;
+}) {
+  if (compact) {
+    return (
+      <div
+        className={cn("flex flex-col items-center px-2 py-2", className)}
+        role="status"
+        aria-label="Cargando conversaciones"
+      >
+        {Array.from({ length: CONVERSATION_SKELETON_ROWS }).map((_, index) => (
+          <div
+            key={index}
+            className="mb-0.5 flex w-full min-w-0 justify-center px-2 py-2.5"
+          >
+            <Skeleton
+              className="size-9 shrink-0 rounded-[10px]"
+              aria-hidden
+            />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div
-      className={cn("space-y-0.5 px-2 py-2", className)}
+      className={cn("space-y-0", className)}
       role="status"
       aria-label="Cargando conversaciones"
     >
-      {Array.from({ length: 6 }).map((_, index) => (
+      {Array.from({ length: CONVERSATION_SKELETON_ROWS }).map((_, index) => (
         <div
           key={index}
-          className="flex w-full min-w-0 items-center gap-2 rounded-[10px] py-2.5 pl-1 pr-1.5"
+          className={cn(
+            "mb-0.5 flex w-full min-w-0 items-center gap-0.5 rounded-[12px] pl-1 pr-1.5 text-sm",
+          )}
         >
-          <Skeleton className="size-7 shrink-0 rounded-lg" />
-          <div className="min-w-0 flex-1 space-y-1.5 pr-1">
-            <Skeleton className="h-3.5 w-[88%] max-w-full rounded-md" />
-            <Skeleton className="h-2.5 w-[55%] max-w-full rounded-md opacity-80" />
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 py-2.5 pl-2 pr-0">
+            <Skeleton
+              className="size-9 shrink-0 rounded-[10px]"
+              aria-hidden
+            />
+            <div className="min-w-0 flex-1 pt-px">
+              <Skeleton
+                className={cn(
+                  "h-4 rounded-md",
+                  TITLE_LINE_MAX_WIDTH[index % TITLE_LINE_MAX_WIDTH.length],
+                )}
+              />
+            </div>
           </div>
         </div>
       ))}

@@ -16,6 +16,9 @@ import type * as database_hello from "../database/hello.js";
 import type * as database_profiles from "../database/profiles.js";
 import type * as database_tasks from "../database/tasks.js";
 import type * as database_users from "../database/users.js";
+import type * as jobs_jobsV2Search from "../jobs/jobsV2Search.js";
+import type * as jobs_matchJobsWithCv from "../jobs/matchJobsWithCv.js";
+import type * as savedJobOffers from "../savedJobOffers.js";
 import type * as storage_resume from "../storage/resume.js";
 import type * as storage_resumeSearchHelpers from "../storage/resumeSearchHelpers.js";
 
@@ -34,6 +37,9 @@ declare const fullApi: ApiFromModules<{
   "database/profiles": typeof database_profiles;
   "database/tasks": typeof database_tasks;
   "database/users": typeof database_users;
+  "jobs/jobsV2Search": typeof jobs_jobsV2Search;
+  "jobs/matchJobsWithCv": typeof jobs_matchJobsWithCv;
+  savedJobOffers: typeof savedJobOffers;
   "storage/resume": typeof storage_resume;
   "storage/resumeSearchHelpers": typeof storage_resumeSearchHelpers;
 }>;

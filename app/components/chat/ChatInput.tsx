@@ -79,7 +79,8 @@ export function ChatInput({
         className="relative m-0 flex w-full flex-col gap-1 rounded-xl border border-[var(--carly-agent-composer-border)] bg-[var(--carly-agent-composer-bg)] py-1 pl-2 pr-1.5 pt-1.5 shadow-[inset_0_0_0_1px_var(--carly-agent-composer-inset)] motion-safe:transition-[border-color,box-shadow] motion-safe:duration-200"
         onMouseDown={(event) => {
           const target = event.target as HTMLElement;
-          if (target.closest("button") || target === textareaRef.current) return;
+          if (target.closest("button") || target === textareaRef.current)
+            return;
           queueMicrotask(() => textareaRef.current?.focus());
         }}
       >
@@ -98,7 +99,7 @@ export function ChatInput({
           autoComplete="off"
           className="min-h-10 w-full resize-none border-0 bg-transparent px-3 pt-2 pb-2 font-[inherit] text-[15px] leading-[1.45] text-[var(--carly-agent-text)] placeholder:text-[var(--carly-agent-text-muted)] placeholder:opacity-70 focus:outline-none disabled:pointer-events-none disabled:opacity-50"
         />
-        <div className="m-0 mt-0 flex items-end justify-between gap-1.5 pb-px pl-1 pr-0.5">
+        <div className="m-0 mt-0 flex items-end justify-between gap-1.5 pb-2 pl-3 pr-0.5">
           <span className="min-w-0 flex-1 text-[11px] text-[var(--carly-agent-text-muted)] sm:text-xs">
             Enter envía · Shift+Enter nueva línea
           </span>
@@ -108,11 +109,7 @@ export function ChatInput({
             className="ml-auto inline-grid h-[30px] w-[30px] flex-none shrink-0 cursor-pointer place-items-center self-end rounded-full border-0 bg-[var(--carly-agent-send-bg)] p-0 text-[var(--carly-agent-send-fg)] motion-safe:transition-[background-color,transform] motion-safe:duration-150 hover:enabled:bg-[var(--carly-agent-send-hover)] active:enabled:scale-95 disabled:cursor-not-allowed disabled:opacity-[0.42]"
             aria-label="Enviar mensaje"
           >
-            <svg
-              viewBox="0 0 20 20"
-              className="h-[15px] w-[15px]"
-              aria-hidden
-            >
+            <svg viewBox="0 0 20 20" className="h-[15px] w-[15px]" aria-hidden>
               <path
                 d="M10 15V5M5.75 9.25 10 5l4.25 4.25"
                 fill="none"

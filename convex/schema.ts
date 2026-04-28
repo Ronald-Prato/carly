@@ -117,4 +117,16 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_conversationId", ["conversationId"])
     .index("by_conversationId_createdAt", ["conversationId", "createdAt"]),
+  /**
+   * Ofertas guardadas por el usuario (snapshot JSON compatible con `EnrichedJobCard`).
+   */
+  savedJobOffers: defineTable({
+    userId: v.id("users"),
+    /** Id numérico del anuncio en LinkedIn (`job.id`). */
+    linkedInPostingId: v.string(),
+    card: v.any(),
+    savedAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_and_linkedInPostingId", ["userId", "linkedInPostingId"]),
 });

@@ -1,6 +1,8 @@
 import { v } from "convex/values";
 import { Id } from "../_generated/dataModel";
 import { mutation, query } from "../_generated/server";
+import { cvDataToPlainText } from "../../lib/cvTemplates/cvDataToPlainText";
+import { parseCvData } from "../../lib/cvTemplates/schema";
 import { htmlToPlainText, searchResumePlainText } from "./resumeSearchHelpers";
 import { getUserIdForQuery, requireUserId } from "../database/users";
 
@@ -227,6 +229,62 @@ export const getById = query({
       enrichmentError: row.enrichmentError,
       downloadUrl,
     };
+  },
+});
+
+/** Texto plano derivado de `resumes.data` (CvData), para matching por IA sin usar `content`. */
+export const getCvPlainTextForMatching = query({
+  args: {
+    resumeId: v.optional(v.id("resumes")),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getUserIdForQuery(ctx);
+    if (!userId) {
+      return { ok: false as const, reason: "not_signed_in" as const };
+    }
+
+    let row;
+    if (args.resumeId) {
+      row = await ctx.db.get("resumes", args.resumeId);
+      if (!row || row.userId !== userId) {
+        return { ok: false as const, reason: "resume_not_found" as const };
+      }
+    } else {
+      const rows = await ctx.db
+        .query("resumes")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect();
+      if (rows.length === 0) {
+        return { ok: false as const, reason: "no_resume" as const };
+      }
+      row = rows.reduce((a, b) => (a.uploadedAt >= b.uploadedAt ? a : b));
+    }
+
+    const resumeTitle = row.title ?? titleFromFileName(row.fileName);
+    if (row.data == null) {
+      return {
+        ok: false as const,
+        reason: "no_structured_data" as const,
+        resumeTitle,
+      };
+    }
+
+    try {
+      const data = parseCvData(row.data);
+      const text = cvDataToPlainText(data);
+      return {
+        ok: true as const,
+        text,
+        resumeTitle,
+        resumeId: row._id,
+      };
+    } catch {
+      return {
+        ok: false as const,
+        reason: "invalid_cv_data" as const,
+        resumeTitle,
+      };
+    }
   },
 });
 

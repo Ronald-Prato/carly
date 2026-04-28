@@ -7,9 +7,13 @@
 :root {
   --carly-border: #e2e8f0;
   --carly-muted: #64748b;
-  --carly-sidebar-active: #f1f5f9;
+  --carly-sidebar-active: #ede9fe;
+  --carly-nav-active-text: #6d28d9;
+  --carly-nav-active-icon-bg: #5b21b6;
+  --carly-nav-inactive-fg: #334155;
+  --carly-profile-card-bg: #eceaf4;
   --carly-page-bg: #ffffff;
-  --carly-sidebar-bg: #ffffff;
+  --carly-sidebar-bg: #f5f6f8;
   --carly-text: #0f172a;
   --carly-text-strong: #1e293b;
   --carly-label: #94a3b8;
@@ -35,13 +39,18 @@
     #ea580c 100%
   );
 
-  /* Panel de chat (tema claro) */
-  --carly-agent-bg: #f1f5f9;
-  --carly-agent-border: #e2e8f0;
-  --carly-agent-user-bg: #e2e8f0;
-  --carly-agent-user-border: #cbd5e1;
+  /* Panel de chat (tema claro) — gradiente suave mismo eje que --carly-gradient (violeta → fucsia → melocotón) */
+  --carly-agent-bg: linear-gradient(
+    135deg,
+    #f8f4ff 0%,
+    #fdf4f9 45%,
+    #fff7f2 100%
+  );
+  --carly-agent-border: rgb(124 58 237 / 0.11);
+  --carly-agent-user-bg: rgb(255 255 255 / 0.78);
+  --carly-agent-user-border: rgb(124 58 237 / 0.13);
   --carly-agent-composer-bg: #ffffff;
-  --carly-agent-composer-border: #cbd5e1;
+  --carly-agent-composer-border: rgb(219 39 119 / 0.12);
   --carly-agent-composer-inset: rgb(15 23 42 / 0.06);
   --carly-agent-text: #0f172a;
   --carly-agent-text-muted: #64748b;
@@ -50,11 +59,11 @@
   --carly-agent-send-hover: #1e293b;
   --carly-agent-link: #2563eb;
   --carly-agent-code-text: #334155;
-  --carly-agent-code-border: rgb(15 23 42 / 0.12);
-  --carly-agent-code-bg: rgb(15 23 42 / 0.06);
-  --carly-agent-blockquote-border: #94a3b8;
-  --carly-agent-scroll-thumb: rgb(15 23 42 / 0.2);
-  --carly-agent-scroll-thumb-hover: rgb(15 23 42 / 0.32);
+  --carly-agent-code-border: rgb(91 33 182 / 0.14);
+  --carly-agent-code-bg: rgb(91 33 182 / 0.07);
+  --carly-agent-blockquote-border: #8b7aad;
+  --carly-agent-scroll-thumb: rgb(91 33 182 / 0.22);
+  --carly-agent-scroll-thumb-hover: rgb(91 33 182 / 0.35);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -94,9 +103,13 @@ html.dark {
   --foreground: #fafafa;
   --carly-border: #27272a;
   --carly-muted: #a1a1aa;
-  --carly-sidebar-active: #27272a;
+  --carly-sidebar-active: rgb(76 29 149 / 0.28);
+  --carly-nav-active-text: #ddd6fe;
+  --carly-nav-active-icon-bg: #7c3aed;
+  --carly-nav-inactive-fg: #cbd5e1;
+  --carly-profile-card-bg: rgb(39 39 42 / 0.85);
   --carly-page-bg: #09090b;
-  --carly-sidebar-bg: #0c0c0e;
+  --carly-sidebar-bg: #0f0f12;
   --carly-text: #fafafa;
   --carly-text-strong: #f4f4f5;
   --carly-label: #71717a;
@@ -116,13 +129,18 @@ html.dark {
   --carly-primary-active: #d4d4d8;
   --carly-composer-bg: rgb(24 24 27 / 0.72);
 
-  /* Panel de chat (tema oscuro) */
-  --carly-agent-bg: #121214;
-  --carly-agent-border: #3f3f46;
-  --carly-agent-user-bg: #27272a;
-  --carly-agent-user-border: #3f3f46;
-  --carly-agent-composer-bg: #1c1c1f;
-  --carly-agent-composer-border: rgb(255 255 255 / 0.12);
+  /* Panel de chat (tema oscuro) — mismo gradiente, más claro que el fondo general */
+  --carly-agent-bg: linear-gradient(
+    135deg,
+    #242030 0%,
+    #281e2c 45%,
+    #2c2420 100%
+  );
+  --carly-agent-border: rgb(167 139 250 / 0.17);
+  --carly-agent-user-bg: rgb(35 31 48 / 0.88);
+  --carly-agent-user-border: rgb(167 139 250 / 0.22);
+  --carly-agent-composer-bg: rgb(30 27 42 / 0.94);
+  --carly-agent-composer-border: rgb(244 114 182 / 0.18);
   --carly-agent-composer-inset: rgb(255 255 255 / 0.06);
   --carly-agent-text: #e4e4e7;
   --carly-agent-text-muted: #a1a1aa;
@@ -133,9 +151,14 @@ html.dark {
   --carly-agent-code-text: #d4d4d8;
   --carly-agent-code-border: rgb(255 255 255 / 0.1);
   --carly-agent-code-bg: rgb(255 255 255 / 0.08);
-  --carly-agent-blockquote-border: #52525b;
-  --carly-agent-scroll-thumb: rgb(255 255 255 / 0.2);
-  --carly-agent-scroll-thumb-hover: rgb(255 255 255 / 0.32);
+  --carly-agent-blockquote-border: #6b5f8a;
+  --carly-agent-scroll-thumb: rgb(167 139 250 / 0.28);
+  --carly-agent-scroll-thumb-hover: rgb(196 181 253 / 0.4);
+}
+
+/* `--carly-agent-bg` es un linear-gradient; Tailwind `bg-*` solo aplica color sólido. */
+.bg-carly-agent {
+  background: var(--carly-agent-bg);
 }
 
 @theme inline {
@@ -230,4 +253,114 @@ body {
   html {
     @apply font-sans;
   }
+}
+
+@layer utilities {
+  /* Jobs match wizard step lines & results reveal (/jobs) */
+  .animate-carly-step-line {
+    animation: carly-step-line 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    opacity: 0;
+  }
+
+  .animate-carly-enter-up {
+    animation: carly-enter-up 0.48s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    opacity: 0;
+  }
+
+  /* Jobs search wizard card — aparece en el panel principal (/jobs) */
+  .animate-carly-wizard-shell-in {
+    animation: carly-wizard-shell-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    opacity: 0;
+  }
+
+  /**
+   * Texto del paso activo en el wizard /jobs — franja luminosa izquierda → derecha
+   */
+  .animate-carly-wizard-active-text {
+    background-image: linear-gradient(
+      105deg,
+      var(--carly-text-strong) 0%,
+      var(--carly-text-strong) 38%,
+      color-mix(in srgb, var(--carly-text-strong) 40%, #7c3aed) 46%,
+      color-mix(in srgb, var(--carly-text-strong) 88%, white) 50%,
+      color-mix(in srgb, var(--carly-text-strong) 40%, #7c3aed) 54%,
+      var(--carly-text-strong) 62%,
+      var(--carly-text-strong) 100%
+    );
+    background-size: 175% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: carly-wizard-text-shimmer 2.35s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-carly-wizard-active-text {
+      animation: none;
+      background-size: 100% 100%;
+      background-image: none;
+      color: var(--carly-text-strong);
+      -webkit-text-fill-color: var(--carly-text-strong);
+    }
+  }
+}
+
+@keyframes carly-step-line {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes carly-enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes carly-wizard-shell-in {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes carly-wizard-text-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: -100% 50%;
+  }
+}
+
+html.dark .animate-carly-wizard-active-text {
+  background-image: linear-gradient(
+    105deg,
+    var(--carly-text-strong) 0%,
+    var(--carly-text-strong) 38%,
+    color-mix(in srgb, var(--carly-text-strong) 45%, #a78bfa) 46%,
+    color-mix(in srgb, var(--carly-text-strong) 94%, white) 50%,
+    color-mix(in srgb, var(--carly-text-strong) 45%, #a78bfa) 54%,
+    var(--carly-text-strong) 62%,
+    var(--carly-text-strong) 100%
+  );
 }

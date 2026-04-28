@@ -279,7 +279,9 @@ export function CvTemplateEditorSession({
     });
 
     syncIframeLayout();
-    const docWithFonts = doc as Document & { fonts?: { ready: Promise<unknown> } };
+    const docWithFonts = doc as Document & {
+      fonts?: { ready: Promise<unknown> };
+    };
     void (async () => {
       try {
         await docWithFonts.fonts?.ready;
@@ -562,7 +564,11 @@ export function CvTemplateEditorSession({
             {downloading ? (
               <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
             ) : (
-              <Download className="size-4 shrink-0" strokeWidth={2} aria-hidden />
+              <Download
+                className="size-4 shrink-0"
+                strokeWidth={2}
+                aria-hidden
+              />
             )}
             {downloading ? "Generando…" : "PDF"}
           </button>
