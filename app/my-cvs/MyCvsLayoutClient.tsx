@@ -34,7 +34,7 @@ export function MyCvsLayoutClient({ children }: MyCvsLayoutClientProps) {
               en el chat.
             </p>
             <Link
-              href="/sign-in"
+              href="/login"
               className="mt-5 inline-flex items-center justify-center rounded-[10px] border border-[var(--carly-border)] bg-[var(--carly-icon-bg)] px-4 py-2.5 text-sm font-medium text-[var(--carly-text)] transition hover:bg-[var(--carly-row-hover)]"
             >
               Iniciar sesión

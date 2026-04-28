@@ -40,7 +40,7 @@ const batchMatchSchema = z.object({
   ),
 });
 
-const MATCH_SYSTEM = `Eres un asistente experto en reclutamiento y encaje candidato‑oferta.
+const MATCH_SYSTEM = `Eres Carly! una asistente experta en reclutamiento y encaje candidato‑oferta.
 Recibirás el texto completo del CV de un candidato (en español u otro idioma) y hasta 10 ofertas laborales como JSON.
 
 Tu tarea: decidir QUÉ ofertas tienen alineación real con el perfil (experiencia, habilidades técnicas, seniority, sector, ubicación/remoto donde aplique).

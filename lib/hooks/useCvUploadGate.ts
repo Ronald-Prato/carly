@@ -13,7 +13,7 @@ const MY_CVS_PATH = "/my-cvs";
  * Si no aplica, redirige a `/my-cvs`.
  */
 export function useCvUploadGate() {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded: authLoaded } = useAuth();
   const router = useRouter();
   const resumeList = useQuery(
     api.storage.resume.list,
@@ -21,15 +21,17 @@ export function useCvUploadGate() {
   );
 
   useEffect(() => {
+    if (!authLoaded) return;
     if (!isSignedIn) {
       router.replace(MY_CVS_PATH);
       return;
     }
     if (resumeList === undefined) return;
     if (resumeList.length === 0) router.replace(MY_CVS_PATH);
-  }, [isSignedIn, resumeList, router]);
+  }, [authLoaded, isSignedIn, resumeList, router]);
 
   const accessAllowed =
+    authLoaded &&
     isSignedIn &&
     resumeList !== undefined &&
     resumeList.length > 0;

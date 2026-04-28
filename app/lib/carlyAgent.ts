@@ -10,7 +10,15 @@ export const CARLY_INSTRUCTIONS = `Eres **Carly**. Tu ÚNICA misión es ayudar a
 
 Regla operativa clave: ante preguntas que puedan depender del CV almacenado, **prioriza la tool de búsqueda por palabras clave** (\`search_resume_by_keywords\`): deduce varios términos concretos del mensaje del usuario (empresas, cargos, tecnologías, estudios, ciudades) y llámala antes de pedir que pegue el CV o fechas. Reserva la tool de **registro completo** del CV (\`fetch_user_resume_record\`) para cuando necesites el HTML entero (reescritura global, borrador completo) o cuando la búsqueda por términos no baste.
 
-Sé clara, práctica y alineada con esa misión. Responde en el mismo idioma que el usuario salvo que pida otra cosa.`;
+Sé clara, práctica y alineada con esa misión. Responde en el mismo idioma que el usuario salvo que pida otra cosa.
+
+Las únicas cosas que puedes hacer son: 
+- Modificar el CV del usuario.
+- Razonar sobre el CV del usuario.
+- Recomendar mejoras para la CV
+
+No debes salirte del tema, solamente puedes hablar al respecto del CV del usuario. Nada más. No le digas al usuario que puedes hacer cosas de las cuales no hay una tool definida. Si te pregunta si puedes hacer algo que no puedes dile que no puedes hacer eso.
+`;
 
 const TITLE_SYSTEM = `Eres Carly, el mismo asistente. Tu salida ahora no es un chat con el usuario: devuelve ÚNICAMENTE un título breve (máximo 80 caracteres) que capte la intención o el tema del mensaje, sin copiarlo literalmente. El mismo idioma que el primer mensaje. Sin comillas envolventes, sin frases de presentación, sin viñetas: solo el texto del título en una línea.`;
 
@@ -54,11 +62,7 @@ async function generateConversationTitle(
     if (model === TITLE_FALLBACK_MODEL) {
       throw e;
     }
-    console.warn(
-      "[carlyAgent] title: retrying with",
-      TITLE_FALLBACK_MODEL,
-      e,
-    );
+    console.warn("[carlyAgent] title: retrying with", TITLE_FALLBACK_MODEL, e);
     res = await oneShot(TITLE_FALLBACK_MODEL);
   }
   const raw = res.choices[0]?.message?.content?.trim() ?? "";
@@ -77,8 +81,13 @@ export async function setConversationTitleIfFirstTurn(options: {
   conversationId: Id<"conversations">;
   convexToken: string;
 }): Promise<void> {
-  const { firstUserText, completionModel, openaiApiKey, conversationId, convexToken } =
-    options;
+  const {
+    firstUserText,
+    completionModel,
+    openaiApiKey,
+    conversationId,
+    convexToken,
+  } = options;
   if (!firstUserText.trim()) return;
   let title: string;
   try {

@@ -161,7 +161,7 @@ export function ChatPanel({
   if (showCvUnified) {
     return (
       <div className="bg-carly-agent relative flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="mx-auto flex min-h-0 w-full max-w-[900px] flex-1 flex-col items-center justify-center gap-4 px-5 py-4">
+        <div className="mx-auto flex min-h-0 w-full max-w-[900px] flex-1 flex-col items-center justify-center gap-4 px-3 py-4">
           <p
             className="m-0 max-w-lg text-balance text-center text-xl font-medium leading-snug text-[var(--carly-agent-text)] sm:text-2xl sm:leading-tight"
             role="status"
@@ -184,7 +184,7 @@ export function ChatPanel({
     <div className="bg-carly-agent relative flex min-h-0 min-w-0 flex-1 flex-col">
       <div
         className={cn(
-          "mx-auto flex min-h-0 w-full max-w-[900px] flex-1 flex-col gap-4 overflow-y-auto p-5",
+          "mx-auto flex min-h-0 w-full max-w-[900px] flex-1 flex-col gap-4 overflow-y-auto px-3 py-5",
           agentScrollSurface,
         )}
       >

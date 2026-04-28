@@ -1,7 +1,9 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
-import type { ReactNode } from "react";
+
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 import {
   getCarlyToolLogLabel,
@@ -11,45 +13,21 @@ import {
 import {
   agentMessageAssistant,
   agentMessageAssistantStreaming,
+  agentMessageUser,
 } from "./agentChatStyles";
 import type { ChatMessage } from "./types";
 
-function parseInline(raw: string): ReactNode[] {
-  const parts = raw.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={i}>{part.slice(2, -2)}</strong>;
-    }
-    if (part.startsWith("*") && part.endsWith("*")) {
-      return <em key={i}>{part.slice(1, -1)}</em>;
-    }
-    return part;
-  });
+function CarlyChatMarkdownBody({ text }: { text: string }) {
+  return <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>;
 }
 
-function renderMarkdown(
-  text: string,
-  options?: { userMessage?: boolean },
-): ReactNode {
-  const userMessage = options?.userMessage === true;
-  return text.split("\n").map((line, i) => {
-    const trimmed = line.trim();
-    if (trimmed === "") return <div key={i} className="h-1.5" />;
-    const isBullet = /^[-*]\s/.test(trimmed);
-    const content = parseInline(isBullet ? trimmed.slice(2) : trimmed);
-    if (isBullet) {
-      return (
-        <div
-          key={i}
-          className={userMessage ? "flex justify-end gap-1.5" : "flex gap-1.5"}
-        >
-          <span className="shrink-0">•</span>
-          <span>{content}</span>
-        </div>
-      );
-    }
-    return <div key={i}>{content}</div>;
-  });
+/** Contenido de mensaje usuario: markdown (estilos en `agentMessageUser`). */
+function UserMessageMarkdown({ text }: { text: string }) {
+  return (
+    <div className={agentMessageUser}>
+      <CarlyChatMarkdownBody text={text} />
+    </div>
+  );
 }
 
 export function ChatMessageBubble({ message }: { message: ChatMessage }) {
@@ -57,19 +35,18 @@ export function ChatMessageBubble({ message }: { message: ChatMessage }) {
 
   if (isUser) {
     return (
-      <div className="flex w-full max-w-full min-w-0 justify-end">
+      <div className="my-5 flex w-full max-w-full min-w-0 justify-end">
         <div
-          className={[
-            "max-w-[min(88%,100%)] rounded-[10px] border border-[var(--carly-agent-user-border)]/45",
-            "bg-[color-mix(in_srgb,var(--carly-agent-user-bg)_52%,transparent)]",
-            "px-2.5 py-1.5 text-right shadow-[0_1px_0_rgb(15_23_42/0.04)]",
-            "dark:border-[var(--carly-agent-user-border)]/35 dark:bg-[color-mix(in_srgb,var(--carly-agent-user-bg)_40%,transparent)] dark:shadow-[0_1px_0_rgb(0_0_0/0.2)]",
-            "min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere]",
-            "text-[15px] leading-[1.62] text-[var(--carly-agent-text)]",
-            "[&>div]:text-right",
-          ].join(" ")}
+          className="relative w-fit max-w-[20rem] overflow-hidden rounded-full shadow-[0_1px_0_rgb(15_23_42/0.04)] dark:shadow-[0_1px_0_rgb(0_0_0/0.2)]"
+          style={{ backgroundImage: "var(--carly-gradient)" }}
         >
-          {renderMarkdown(message.content, { userMessage: true })}
+          <div
+            className="pointer-events-none absolute inset-0 rounded-full bg-[color-mix(in_srgb,var(--carly-page-bg)_92%,transparent)] dark:bg-[color-mix(in_srgb,var(--carly-page-bg)_88%,transparent)]"
+            aria-hidden
+          />
+          <div className="relative z-10 pl-5 pr-3 py-2.5 text-left leading-relaxed text-[var(--carly-agent-text)]">
+            <UserMessageMarkdown text={message.content} />
+          </div>
         </div>
       </div>
     );
@@ -79,7 +56,7 @@ export function ChatMessageBubble({ message }: { message: ChatMessage }) {
   const assistantBodyClass = [
     agentMessageAssistant,
     message.streamAnimate ? agentMessageAssistantStreaming : null,
-    message.streamAnimate ? "min-h-[1.5rem] whitespace-pre-wrap" : null,
+    message.streamAnimate ? "min-h-[1.5rem]" : null,
   ]
     .filter(Boolean)
     .join(" ");
@@ -89,7 +66,7 @@ export function ChatMessageBubble({ message }: { message: ChatMessage }) {
       {segments.map((seg, i) =>
         seg.kind === "text" ? (
           <div key={i} className={assistantBodyClass}>
-            {renderMarkdown(seg.text)}
+            <CarlyChatMarkdownBody text={seg.text} />
           </div>
         ) : (
           <div

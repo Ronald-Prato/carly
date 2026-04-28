@@ -69,7 +69,7 @@ export function ChatInput({
   return (
     <div
       className={cn(
-        "motion-composer-shell z-10 mx-auto flex w-full max-w-[900px] flex-col gap-1.5 px-5 pb-4 pt-3",
+        "motion-composer-shell z-10 mx-auto flex w-full max-w-[900px] flex-col gap-1.5 px-3 pb-4 pt-3",
         centered &&
           "absolute top-[48%] left-1/2 max-w-[min(720px,calc(100%-48px))] -translate-x-1/2 -translate-y-1/2 border-t-0 pt-0",
       )}
