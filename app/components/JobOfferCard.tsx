@@ -229,7 +229,7 @@ export function JobOfferCard({
             </p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center justify-end gap-2 self-start sm:self-auto">
+        <div className="flex shrink-0 items-center justify-end gap-2 self-end sm:self-auto">
           {onSaveToggle ? (
             <>
               <button
