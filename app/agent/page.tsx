@@ -4,7 +4,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AppSidebar } from "../components/AppSidebar";
+import { AppShell } from "../components/AppShell";
 import { ChatPanel } from "../components/chat/ChatPanel";
 import type { ChatMessage } from "../components/chat/types";
 import { api } from "@/convex/_generated/api";
@@ -134,30 +134,27 @@ function AgentPageContent() {
   }
 
   return (
-    <div className="flex h-dvh min-h-0 bg-[var(--carly-page-bg)] text-[var(--carly-text)] antialiased">
-      <AppSidebar
-        mode="chat"
-        activeConversationId={serverConvId}
-        onSelectConversation={selectConversation}
-        onArchiveConversation={onArchiveConversation}
-        onNewChat={createChat}
-      />
-      <main className="flex min-w-0 flex-1 flex-col bg-[var(--carly-page-bg)]">
-        <div className="bg-carly-agent flex min-h-0 min-w-0 flex-1 flex-col">
-          <ChatPanel
-            messages={displayMessages}
-            setMessages={setDisplayMessages}
-            isSignedIn={Boolean(isSignedIn)}
-            conversationId={conversationIdForApi}
-            onConversationCreated={onConversationCreated}
-            persistFromConvex={persistFromConvex}
-            centerComposerWhenEmpty={cvReady}
-            resumeLoading={resumeLoading}
-            emptyStateTitle={emptyCvHeadline}
-          />
-        </div>
-      </main>
-    </div>
+    <AppShell
+      mode="chat"
+      activeConversationId={serverConvId}
+      onSelectConversation={selectConversation}
+      onArchiveConversation={onArchiveConversation}
+      onNewChat={createChat}
+    >
+      <div className="bg-carly-agent flex min-h-0 min-w-0 flex-1 flex-col">
+        <ChatPanel
+          messages={displayMessages}
+          setMessages={setDisplayMessages}
+          isSignedIn={Boolean(isSignedIn)}
+          conversationId={conversationIdForApi}
+          onConversationCreated={onConversationCreated}
+          persistFromConvex={persistFromConvex}
+          centerComposerWhenEmpty={cvReady}
+          resumeLoading={resumeLoading}
+          emptyStateTitle={emptyCvHeadline}
+        />
+      </div>
+    </AppShell>
   );
 }
 

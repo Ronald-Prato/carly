@@ -11,6 +11,7 @@ import {
   Home,
   Moon,
   SquarePen,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -36,6 +37,9 @@ import { useMutation, useQuery } from "convex/react";
 
 const SIDEBAR_COLLAPSED_KEY = "carly-sidebar-collapsed";
 
+/** Versión junto al nombre Carly (sidebar abierta y rail colapsado). */
+const CARLY_VERSION_LABEL = "alpha 1.0";
+
 /** En false, se ocultan Agente, Nuevo chat y conversaciones. */
 const SHOW_AGENT_IN_SIDEBAR = true;
 
@@ -56,6 +60,11 @@ type AppSidebarProps = {
   onSelectConversation: (id: Id<"conversations">) => void;
   onArchiveConversation: (id: Id<"conversations">) => void;
   onNewChat: () => void;
+  /**
+   * Vista móvil (`AppShell`): sidebar expandido, sin colapsar a rail, botón cerrar drawer.
+   */
+  isMobileShell?: boolean;
+  onMobileDrawerClose?: () => void;
 };
 
 function iconBoxClass(active: boolean) {
@@ -175,6 +184,8 @@ export function AppSidebar({
   onSelectConversation,
   onArchiveConversation,
   onNewChat,
+  isMobileShell = false,
+  onMobileDrawerClose,
 }: AppSidebarProps) {
   const { isSignedIn } = useAuth();
   const pathname = usePathname();
@@ -306,6 +317,7 @@ export function AppSidebar({
   const { resolvedTheme, setTheme } = useTheme();
   const [themeMounted, setThemeMounted] = useState(false);
   useEffect(() => {
+    /* eslint-disable-next-line react-hooks/set-state-in-effect -- evitar mismatch de tema SSR/hidración */
     setThemeMounted(true);
   }, []);
 
@@ -317,8 +329,17 @@ export function AppSidebar({
   const listLoadingConversations =
     isSignedIn && showChatChrome && conversationRows === undefined;
 
+  const inMobileDrawer = Boolean(isMobileShell && onMobileDrawerClose);
+
   /** Modo rail solo-iconos estable: solo con ancho estrecho y tras terminar la animación de colapso (al expandir, layout completo antes de que crezca el aside). */
-  const showIconRail = railCollapsed && widthCollapsed;
+  const showIconRail =
+    !inMobileDrawer && railCollapsed && widthCollapsed;
+
+  const sidebarWidthClass = inMobileDrawer
+    ? SIDEBAR_EXPANDED_CLASS
+    : widthCollapsed
+      ? SIDEBAR_COLLAPSED_CLASS
+      : SIDEBAR_EXPANDED_CLASS;
 
   const showCvTabOnboarding =
     isSignedIn &&
@@ -333,9 +354,9 @@ export function AppSidebar({
     <aside
       ref={asideRef}
       className={cn(
-        "relative flex shrink-0 flex-col overflow-hidden border-r border-[var(--carly-border)] bg-[var(--carly-sidebar-bg)] antialiased",
-        SIDEBAR_TRANSITION,
-        widthCollapsed ? SIDEBAR_COLLAPSED_CLASS : SIDEBAR_EXPANDED_CLASS,
+        "relative flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-r border-[var(--carly-border)] bg-[var(--carly-sidebar-bg)] antialiased",
+        !inMobileDrawer && SIDEBAR_TRANSITION,
+        sidebarWidthClass,
       )}
     >
       <div
@@ -347,14 +368,19 @@ export function AppSidebar({
       <header className="shrink-0 border-b border-[var(--carly-border)] px-3 py-3.5">
         {!showIconRail ? (
           <div className="flex items-center justify-between gap-2">
-            <h1 className="min-w-0 flex-1 bg-gradient-to-r from-violet-600 via-fuchsia-500 to-orange-500 bg-clip-text text-xl font-bold leading-tight tracking-tight text-transparent sm:text-2xl">
-              <Link
-                href="/"
-                className="block min-w-0 text-transparent [background:inherit] [background-clip:padding-box] hover:opacity-90"
-              >
-                Carly
-              </Link>
-            </h1>
+            <div className="flex min-w-0 flex-1 items-baseline gap-2">
+              <h1 className="min-w-0 shrink bg-gradient-to-r from-violet-600 via-fuchsia-500 to-orange-500 bg-clip-text text-xl font-bold leading-tight tracking-tight text-transparent sm:text-2xl">
+                <Link
+                  href="/"
+                  className="block min-w-0 text-transparent [background:inherit] [background-clip:padding-box] hover:opacity-90"
+                >
+                  Carly
+                </Link>
+              </h1>
+              <span className="shrink-0 text-xs font-medium leading-none tracking-tight text-[var(--carly-muted)] whitespace-nowrap">
+                {CARLY_VERSION_LABEL}
+              </span>
+            </div>
             <div className="flex shrink-0 items-center gap-2">
               {SHOW_AGENT_IN_SIDEBAR && agentActive ? (
                 <button
@@ -371,26 +397,46 @@ export function AppSidebar({
                   />
                 </button>
               ) : null}
-            <button
-              type="button"
-              onClick={beginCollapse}
-              aria-expanded={!showIconRail}
-              aria-label="Colapsar barra lateral"
-              className="inline-flex size-8 shrink-0 items-center justify-center rounded-[8px] border border-[var(--carly-border)] bg-[var(--carly-page-bg)] text-[var(--carly-muted)] shadow-sm transition hover:bg-[var(--carly-row-hover)] hover:text-[var(--carly-text)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--carly-primary-bg)]"
-            >
-              <ChevronsLeft className="size-3.5" strokeWidth={2} aria-hidden />
-            </button>
+              {inMobileDrawer ? (
+                <button
+                  type="button"
+                  onClick={() => onMobileDrawerClose?.()}
+                  aria-label="Cerrar menú"
+                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-[8px] border border-[var(--carly-border)] bg-[var(--carly-page-bg)] text-[var(--carly-muted)] shadow-sm transition hover:bg-[var(--carly-row-hover)] hover:text-[var(--carly-text)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--carly-primary-bg)]"
+                >
+                  <X className="size-4" strokeWidth={2} aria-hidden />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={beginCollapse}
+                  aria-expanded={!showIconRail}
+                  aria-label="Colapsar barra lateral"
+                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-[8px] border border-[var(--carly-border)] bg-[var(--carly-page-bg)] text-[var(--carly-muted)] shadow-sm transition hover:bg-[var(--carly-row-hover)] hover:text-[var(--carly-text)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--carly-primary-bg)]"
+                >
+                  <ChevronsLeft
+                    className="size-3.5"
+                    strokeWidth={2}
+                    aria-hidden
+                  />
+                </button>
+              )}
             </div>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">
-            <Link
-              href="/"
-              title="Carly — Inicio"
-              className="flex size-9 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 via-fuchsia-500 to-orange-500 text-xs font-bold text-white shadow-sm transition hover:opacity-92"
-            >
-              C
-            </Link>
+            <div className="flex flex-col items-center gap-1">
+              <Link
+                href="/"
+                title="Carly — Inicio"
+                className="flex size-9 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 via-fuchsia-500 to-orange-500 text-xs font-bold text-white shadow-sm transition hover:opacity-92"
+              >
+                C
+              </Link>
+              <span className="max-w-[4rem] text-center text-[10px] font-medium leading-none tracking-tight text-[var(--carly-muted)]">
+                {CARLY_VERSION_LABEL}
+              </span>
+            </div>
             <button
               type="button"
               onClick={beginExpand}
