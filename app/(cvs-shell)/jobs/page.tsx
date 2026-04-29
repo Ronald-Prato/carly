@@ -137,18 +137,26 @@ function JobsSlideshow({
   savedPostingIds,
   saveBusyId,
   onToggleSave,
+  onBack,
 }: {
   jobs: EnrichedJobCard[];
   savedPostingIds: string[] | undefined;
   saveBusyId: string | null;
   onToggleSave: (job: EnrichedJobCard) => void | Promise<void>;
+  onBack: () => void;
 }) {
   const [api, setApi] = useState<CarouselApi | null>(null);
   const [current, setCurrent] = useState(1);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
 
   useEffect(() => {
     if (!api) return;
-    const sync = () => setCurrent(api.selectedScrollSnap() + 1);
+    const sync = () => {
+      setCurrent(api.selectedScrollSnap() + 1);
+      setCanScrollPrev(api.canScrollPrev());
+      setCanScrollNext(api.canScrollNext());
+    };
     sync();
     api.on("reInit", sync);
     api.on("select", sync);
@@ -158,29 +166,68 @@ function JobsSlideshow({
     };
   }, [api]);
 
+  const scrollPrev = useCallback(() => api?.scrollPrev(), [api]);
+  const scrollNext = useCallback(() => api?.scrollNext(), [api]);
+
   return (
-    <div className="flex w-full flex-col">
-      <p
-        className="shrink-0 px-4 pt-6 text-center text-sm tabular-nums text-[var(--carly-muted)] sm:px-6"
-        aria-live="polite"
-      >
-        {current} / {jobs.length}
-      </p>
+    <div className="flex min-h-0 w-full flex-1 flex-col gap-0">
+      <div className="sticky top-0 z-20 flex w-full shrink-0 items-center justify-between border-b border-slate-200/70 bg-slate-100/90 px-4 py-3 backdrop-blur-md dark:border-zinc-800/70 dark:bg-[#050506]/90 sm:px-6">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-200/80 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/45 dark:text-zinc-300 dark:hover:bg-zinc-800/90 dark:hover:text-zinc-50"
+        >
+          <ChevronLeft
+            className="size-[18px] shrink-0"
+            strokeWidth={2.25}
+            aria-hidden
+          />
+          Volver
+        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={scrollPrev}
+            disabled={!canScrollPrev}
+            aria-label="Oferta anterior"
+            className="inline-flex size-8 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-200/80 disabled:opacity-40 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
+          >
+            <ChevronLeft className="size-4" aria-hidden strokeWidth={2.25} />
+          </button>
+          <span
+            className="px-1 text-sm tabular-nums text-[var(--carly-muted)]"
+            aria-live="polite"
+          >
+            {current} / {jobs.length}
+          </span>
+          <button
+            type="button"
+            onClick={scrollNext}
+            disabled={!canScrollNext}
+            aria-label="Siguiente oferta"
+            className="inline-flex size-8 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-200/80 disabled:opacity-40 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
+          >
+            <ChevronRight className="size-4" aria-hidden strokeWidth={2.25} />
+          </button>
+        </div>
+      </div>
       <Carousel
         setApi={setApi}
         opts={{
           align: "center",
           containScroll: "trimSnaps",
           loop: false,
-          watchDrag: false,
+          watchDrag: true,
         }}
         className="relative flex w-full flex-col pb-8"
       >
-        <div className="flex w-full items-start gap-5 px-5 sm:gap-8 sm:px-10 lg:gap-10 lg:px-14">
-          <JobsCarouselStickyNav side="prev" />
+        <div className="flex w-full items-start gap-3 px-3 sm:gap-8 sm:px-10 lg:gap-10 lg:px-14">
+          <div className="hidden sm:block">
+            <JobsCarouselStickyNav side="prev" />
+          </div>
           <CarouselContent
             className="-ml-0 min-w-0 flex-1"
-            viewportClassName="px-2 py-8 sm:px-4 sm:py-10 lg:px-6 lg:py-12"
+            viewportClassName="px-1 py-6 sm:px-4 sm:py-10 lg:px-6 lg:py-12"
           >
             {jobs.map((job, i) => {
               const pid = job.id?.trim() ?? "";
@@ -202,7 +249,9 @@ function JobsSlideshow({
               );
             })}
           </CarouselContent>
-          <JobsCarouselStickyNav side="next" />
+          <div className="hidden sm:block">
+            <JobsCarouselStickyNav side="next" />
+          </div>
         </div>
       </Carousel>
     </div>
@@ -546,32 +595,17 @@ export default function JobsPage() {
           ) : null}
 
           {showJobCarousel ? (
-            <div className="flex min-h-0 w-full flex-1 flex-col gap-0">
-              <div className="sticky top-0 z-20 flex w-full shrink-0 justify-start border-b border-slate-200/70 bg-slate-100/90 px-4 py-3 backdrop-blur-md dark:border-zinc-800/70 dark:bg-[#050506]/90 sm:px-6">
-                <button
-                  type="button"
-                  onClick={() => setOffersUnlocked(false)}
-                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-200/80 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/45 dark:text-zinc-300 dark:hover:bg-zinc-800/90 dark:hover:text-zinc-50"
-                >
-                  <ChevronLeft
-                    className="size-[18px] shrink-0"
-                    strokeWidth={2.25}
-                    aria-hidden
-                  />
-                  Volver
-                </button>
-              </div>
-              <div
-                key={resultsRevealKey}
-                className="animate-carly-enter-up flex min-h-0 w-full flex-1 flex-col overflow-x-hidden"
-              >
-                <JobsSlideshow
-                  jobs={jobs}
-                  savedPostingIds={savedPostingIds}
-                  saveBusyId={saveBusyId}
-                  onToggleSave={handleToggleSave}
-                />
-              </div>
+            <div
+              key={resultsRevealKey}
+              className="animate-carly-enter-up flex min-h-0 w-full flex-1 flex-col overflow-x-hidden"
+            >
+              <JobsSlideshow
+                jobs={jobs}
+                savedPostingIds={savedPostingIds}
+                saveBusyId={saveBusyId}
+                onToggleSave={handleToggleSave}
+                onBack={() => setOffersUnlocked(false)}
+              />
             </div>
           ) : null}
         </div>

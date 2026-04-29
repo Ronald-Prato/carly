@@ -64,11 +64,13 @@ function StatPill({
   label,
   value,
   tooltip,
+  className,
 }: {
   icon: ComponentType<{ className?: string }>;
   label: string;
   value: string | null | undefined;
   tooltip: string;
+  className?: string;
 }) {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -78,7 +80,7 @@ function StatPill({
   }
 
   return (
-    <div className="flex min-w-0 items-center gap-3">
+    <div className={cn("flex min-w-0 items-center gap-3", className)}>
       <button
         ref={triggerRef}
         type="button"
@@ -206,28 +208,26 @@ export function JobOfferCard({
           </ul>
         </div>
       ) : null}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 gap-3 sm:gap-4">
-          {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- logos externos sin optimización garantizada
-            <img
-              src={avatarUrl}
-              alt=""
-              className="size-14 shrink-0 rounded-xl border border-slate-100 bg-white object-contain p-1 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:size-16"
-              width={64}
-              height={64}
-            />
-          ) : null}
-          <div className="min-w-0 flex-1">
-            <h2 className="break-words text-lg font-semibold leading-snug text-slate-950 dark:text-zinc-50 sm:text-xl">
-              {title}
-            </h2>
-            <p className="mt-1 text-base text-slate-600 dark:text-zinc-300">
-              {company}
-            </p>
-          </div>
+      <div className="flex items-start gap-3 sm:gap-4">
+        {avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- logos externos sin optimización garantizada
+          <img
+            src={avatarUrl}
+            alt=""
+            className="size-12 shrink-0 rounded-xl border border-slate-100 bg-white object-contain p-1 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:size-16"
+            width={64}
+            height={64}
+          />
+        ) : null}
+        <div className="min-w-0 flex-1">
+          <h2 className="break-words text-base font-semibold leading-snug text-slate-950 dark:text-zinc-50 sm:text-xl">
+            {title}
+          </h2>
+          <p className="mt-0.5 text-sm text-slate-600 dark:text-zinc-300 sm:text-base">
+            {company}
+          </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2 self-start sm:self-auto">
+        <div className="flex shrink-0 items-center gap-2">
           {onSaveToggle ? (
             <>
               <button
@@ -283,40 +283,45 @@ export function JobOfferCard({
         </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 border-b border-slate-200 pb-4 dark:border-zinc-800">
+      <div className="mt-5 flex flex-col border-b border-slate-200 pb-4 dark:border-zinc-800 sm:flex-row sm:flex-wrap sm:gap-x-5 sm:gap-y-3">
         <StatPill
           icon={MapPin}
           label="Ubicación"
           value={location}
           tooltip={STAT_ROW_TOOLTIPS.location}
+          className="border-b border-slate-200 py-3 dark:border-zinc-800 sm:border-0 sm:py-0"
         />
         <StatPill
           icon={Monitor}
           label="Modalidad"
           value={workplace}
           tooltip={STAT_ROW_TOOLTIPS.workplace}
+          className="border-b border-slate-200 py-3 dark:border-zinc-800 sm:border-0 sm:py-0"
         />
         <StatPill
           icon={BriefcaseBusiness}
           label="Tipo de empleo"
           value={employment}
           tooltip={STAT_ROW_TOOLTIPS.employment}
+          className="border-b border-slate-200 py-3 dark:border-zinc-800 sm:border-0 sm:py-0"
         />
         <StatPill
           icon={Calendar}
           label="Creada"
           value={createdAtText}
           tooltip={STAT_ROW_TOOLTIPS.created}
+          className="border-b border-slate-200 py-3 dark:border-zinc-800 sm:border-0 sm:py-0"
         />
         <StatPill
           icon={Sparkles}
           label="Solicitud sencilla"
           value={simpleApplyText}
           tooltip={STAT_ROW_TOOLTIPS.easyApply}
+          className="border-b border-slate-200 py-3 dark:border-zinc-800 sm:border-0 sm:py-0"
         />
       </div>
 
-      <div className="mt-4 grid gap-3 rounded-lg bg-blue-50/70 px-3 py-3 sm:grid-cols-2 dark:bg-blue-950/20">
+      <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-blue-50/70 px-3 py-3 dark:bg-blue-950/20">
         <InfoPanel
           icon={Users}
           title={applyClicks ?? "Sin dato de clics"}
