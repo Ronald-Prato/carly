@@ -208,26 +208,28 @@ export function JobOfferCard({
           </ul>
         </div>
       ) : null}
-      <div className="flex items-start gap-3 sm:gap-4">
-        {avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- logos externos sin optimización garantizada
-          <img
-            src={avatarUrl}
-            alt=""
-            className="size-12 shrink-0 rounded-xl border border-slate-100 bg-white object-contain p-1 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:size-16"
-            width={64}
-            height={64}
-          />
-        ) : null}
-        <div className="min-w-0 flex-1">
-          <h2 className="break-words text-base font-semibold leading-snug text-slate-950 dark:text-zinc-50 sm:text-xl">
-            {title}
-          </h2>
-          <p className="mt-0.5 text-sm text-slate-600 dark:text-zinc-300 sm:text-base">
-            {company}
-          </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+        <div className="flex items-start gap-3 sm:gap-4">
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- logos externos sin optimización garantizada
+            <img
+              src={avatarUrl}
+              alt=""
+              className="size-12 shrink-0 rounded-xl border border-slate-100 bg-white object-contain p-1 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:size-16"
+              width={64}
+              height={64}
+            />
+          ) : null}
+          <div className="min-w-0 flex-1">
+            <h2 className="break-words text-base font-semibold leading-snug text-slate-950 dark:text-zinc-50 sm:text-xl">
+              {title}
+            </h2>
+            <p className="mt-0.5 text-sm text-slate-600 dark:text-zinc-300 sm:text-base">
+              {company}
+            </p>
+          </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2 self-start sm:self-auto">
           {onSaveToggle ? (
             <>
               <button
