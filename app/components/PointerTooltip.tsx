@@ -27,7 +27,11 @@ export function PointerTooltipPortal({
     const el = anchorRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    setPos({ left: r.left + r.width / 2, top: r.top });
+    const vw = window.innerWidth;
+    const idealCenter = r.left + r.width / 2;
+    const margin = 8;
+    const clampedLeft = Math.max(margin, Math.min(vw - margin, idealCenter));
+    setPos({ left: clampedLeft, top: r.top });
   }, [anchorRef]);
 
   useLayoutEffect(() => {
