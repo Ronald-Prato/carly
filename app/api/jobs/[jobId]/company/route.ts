@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+
+import {
+  convexJwtFromClerk,
+  linkedInSessionForNextHandler,
+} from "@/lib/convex/linkedinSessionForNext";
 import { fetchCompanyCardGraphql } from "@/lib/linkedin/companyCardGraphql";
 
 export async function GET(
@@ -14,7 +19,15 @@ export async function GET(
   }
 
   try {
-    const block = await fetchCompanyCardGraphql(jobId);
+    const token = await convexJwtFromClerk();
+    if (!token) {
+      return NextResponse.json(
+        { error: "Debes iniciar sesión para cargar la empresa." },
+        { status: 401 },
+      );
+    }
+    const session = await linkedInSessionForNextHandler(token);
+    const block = await fetchCompanyCardGraphql(jobId, session);
     return NextResponse.json(block);
   } catch (err) {
     const message =

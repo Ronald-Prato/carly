@@ -5,7 +5,8 @@
 import {
   assertOkLinkedIn,
   baseHeaders,
-  linkedinCookiesOrThrow,
+  linkedinCookiesFromCredentials,
+  type LinkedInSessionCredentials,
   liTrackJson,
 } from "./linkedinClient";
 
@@ -57,13 +58,14 @@ export type LinkedInJobPostingDetail = {
 
 export async function fetchLinkedInJobPostingDetail(
   jobId: string,
+  session: LinkedInSessionCredentials,
 ): Promise<LinkedInJobPostingDetail> {
   const jid = jobId.trim();
   if (!/^\d+$/.test(jid)) {
     throw new Error(`El id de oferta debe ser numérico: ${jobId}`);
   }
 
-  const { cookieHeader, csrfToken } = linkedinCookiesOrThrow();
+  const { cookieHeader, csrfToken } = linkedinCookiesFromCredentials(session);
   const url = `${JOB_POSTING_URL}/${jid}`;
 
   const response = await fetch(url, {

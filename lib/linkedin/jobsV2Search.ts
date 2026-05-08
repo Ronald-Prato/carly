@@ -1,6 +1,7 @@
 import { fetchLinkedInJobPostingDetail } from "./jobPostingDetail";
 import { type LinkedInJobCard, fetchLinkedInJobList } from "./jobsList";
 import type { JobSearchCountryCode } from "./jobSearchOptions";
+import type { LinkedInSessionCredentials } from "./linkedinClient";
 import {
   type LinkedInTopFitCardBlock,
   fetchTopFitCardGraphql,
@@ -118,6 +119,7 @@ function normalizeWorkType(
 async function readJobV2(
   card: LinkedInJobCard,
   now: Date,
+  session: LinkedInSessionCredentials,
 ): Promise<JobsV2SearchResult | null> {
   const numericId = card.id && /^\d+$/.test(card.id) ? card.id : null;
   if (!numericId) {
@@ -125,8 +127,8 @@ async function readJobV2(
   }
 
   const [summary, posting] = await Promise.all([
-    fetchTopFitCardGraphql(numericId).catch(() => null),
-    fetchLinkedInJobPostingDetail(numericId).catch(() => null),
+    fetchTopFitCardGraphql(numericId, session).catch(() => null),
+    fetchLinkedInJobPostingDetail(numericId, session).catch(() => null),
   ]);
 
   const postedAt = publishedAtMs(card, summary, now);
@@ -145,19 +147,23 @@ async function readJobV2(
 
 export async function fetchJobsV2Search(
   request: JobsV2SearchRequest,
+  session: LinkedInSessionCredentials,
 ): Promise<JobsV2SearchResult[]> {
   const limit = Math.min(
     Math.max(Math.floor(request.limit ?? DEFAULT_JOBS_V2_LIMIT), 1),
     100,
   );
-  const cards = await fetchLinkedInJobList({
-    keywords: request.keywords,
-    country: request.country,
-    count: limit,
-  });
+  const cards = await fetchLinkedInJobList(
+    {
+      keywords: request.keywords,
+      country: request.country,
+      count: limit,
+    },
+    session,
+  );
   const now = new Date();
   const enriched = await Promise.all(
-    cards.slice(0, limit).map((card) => readJobV2(card, now)),
+    cards.slice(0, limit).map((card) => readJobV2(card, now, session)),
   );
   return enriched.filter((job): job is JobsV2SearchResult => job !== null);
 }

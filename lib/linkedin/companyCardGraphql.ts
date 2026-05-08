@@ -5,7 +5,8 @@
 
 import {
   baseHeaders,
-  linkedinCookiesOrThrow,
+  linkedinCookiesFromCredentials,
+  type LinkedInSessionCredentials,
   liTrackJson,
   voyagerQueryUrl,
 } from "./linkedinClient";
@@ -226,6 +227,7 @@ export function parseCompanySummaryFromIncluded(
 /** Respuesta COMPANY_CARD desde `/voyager/api/graphql`; sin `includeWebMetadata` (Python). */
 export async function fetchCompanyCardGraphql(
   jobId: string,
+  session: LinkedInSessionCredentials,
 ): Promise<LinkedInCompanyCardBlock> {
   const jid = jobId.trim();
   const queryId =
@@ -243,7 +245,7 @@ export async function fetchCompanyCardGraphql(
   }
 
   const url = companyCardGraphqlUrl(jid, queryId);
-  const { cookieHeader, csrfToken } = linkedinCookiesOrThrow();
+  const { cookieHeader, csrfToken } = linkedinCookiesFromCredentials(session);
 
   const response = await fetch(url, {
     method: "GET",

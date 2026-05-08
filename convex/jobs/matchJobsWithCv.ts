@@ -22,10 +22,12 @@ import type { LinkedInJobPostingDetail } from "../../lib/linkedin/jobPostingDeta
 import type { JobsV2SearchResult } from "../../lib/linkedin/jobsV2Search";
 import type { EnrichedJobCard } from "../../lib/jobs/enrichedJobCard";
 import type { LinkedInJobCard } from "../../lib/linkedin/jobsList";
+import type { LinkedInSessionCredentials } from "../../lib/linkedin/linkedinClient";
 import {
   getJobsMatchCacheJson,
   setJobsMatchCacheJson,
 } from "../../lib/redis/jobsMatchCache";
+import { linkedInSessionForAction } from "../linkedinCredentials";
 
 const BATCH_SIZE = 10;
 const MODEL = "gpt-4o-mini";
@@ -128,7 +130,10 @@ ${JSON.stringify(offersJson, null, 2)}
   return safe.data.matching_offers.filter((m) => validIds.has(m.id));
 }
 
-async function fetchJobBundle(card: LinkedInJobCard): Promise<{
+async function fetchJobBundle(
+  card: LinkedInJobCard,
+  session: LinkedInSessionCredentials,
+): Promise<{
   detail: LinkedInTopFitCardBlock | null;
   description: LinkedInJobPostingDetail | null;
   detailError: string | null;
@@ -145,8 +150,8 @@ async function fetchJobBundle(card: LinkedInJobCard): Promise<{
   }
 
   const [vacancyResult, postingResult] = await Promise.allSettled([
-    fetchTopFitCardGraphql(numericId),
-    fetchLinkedInJobPostingDetail(numericId),
+    fetchTopFitCardGraphql(numericId, session),
+    fetchLinkedInJobPostingDetail(numericId, session),
   ]);
 
   let detail: LinkedInTopFitCardBlock | null = null;
@@ -256,13 +261,17 @@ async function runMatchJobsSearchPhase(
 
   let jobs: JobsV2SearchResult[];
   try {
+    const session = await linkedInSessionForAction(ctx);
     const resolved = resolveCountry(args.country.trim() || null).id;
     const limitRaw = Math.min(Math.max(Math.floor(args.limit ?? 50), 1), 100);
-    jobs = await fetchJobsV2Search({
-      keywords: args.keywords.trim(),
-      country: resolved as JobSearchCountryCode,
-      limit: limitRaw,
-    });
+    jobs = await fetchJobsV2Search(
+      {
+        keywords: args.keywords.trim(),
+        country: resolved as JobSearchCountryCode,
+        limit: limitRaw,
+      },
+      session,
+    );
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Error buscando ofertas.";
     return { ok: false, error: msg };
@@ -312,6 +321,8 @@ async function runMatchJobsMatchPhase(
     return { ok: true, jobs: [] };
   }
 
+  const linkedInSession = await linkedInSessionForAction(ctx);
+
   const batches = chunk(jobs, BATCH_SIZE);
   const batchResults = await Promise.all(
     batches.map((batch) => matchBatchWithOpenAi(openai, cv.text, batch)),
@@ -340,7 +351,7 @@ async function runMatchJobsMatchPhase(
   const jobsOut: EnrichedJobCard[] = await Promise.all(
     orderedMatched.map(async ({ job, criteria }) => {
       const card = jobsV2ResultToLinkedInCard(job);
-      const bundle = await fetchJobBundle(card);
+      const bundle = await fetchJobBundle(card, linkedInSession);
       return {
         ...card,
         ...bundle,

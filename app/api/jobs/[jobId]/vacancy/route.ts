@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+
+import {
+  convexJwtFromClerk,
+  linkedInSessionForNextHandler,
+} from "@/lib/convex/linkedinSessionForNext";
 import { fetchTopFitCardGraphql } from "@/lib/linkedin/topFitCardGraphql";
 
 export async function GET(
@@ -14,7 +19,15 @@ export async function GET(
   }
 
   try {
-    const block = await fetchTopFitCardGraphql(jobId);
+    const token = await convexJwtFromClerk();
+    if (!token) {
+      return NextResponse.json(
+        { error: "Debes iniciar sesión para cargar la vacante." },
+        { status: 401 },
+      );
+    }
+    const session = await linkedInSessionForNextHandler(token);
+    const block = await fetchTopFitCardGraphql(jobId, session);
     return NextResponse.json(block);
   } catch (err) {
     const message =

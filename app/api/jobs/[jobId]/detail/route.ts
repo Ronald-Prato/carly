@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+
+import {
+  convexJwtFromClerk,
+  linkedInSessionForNextHandler,
+} from "@/lib/convex/linkedinSessionForNext";
 import { fetchLinkedInJobPostingDetail } from "@/lib/linkedin/jobPostingDetail";
 
 export async function GET(
@@ -14,7 +19,15 @@ export async function GET(
   }
 
   try {
-    const detail = await fetchLinkedInJobPostingDetail(jobId);
+    const token = await convexJwtFromClerk();
+    if (!token) {
+      return NextResponse.json(
+        { error: "Debes iniciar sesión para cargar el detalle." },
+        { status: 401 },
+      );
+    }
+    const session = await linkedInSessionForNextHandler(token);
+    const detail = await fetchLinkedInJobPostingDetail(jobId, session);
     return NextResponse.json(detail);
   } catch (err) {
     const message =

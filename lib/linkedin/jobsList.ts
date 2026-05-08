@@ -5,7 +5,8 @@
 import {
   assertOkLinkedIn,
   baseHeaders,
-  linkedinCookiesOrThrow,
+  linkedinCookiesFromCredentials,
+  type LinkedInSessionCredentials,
   liTrackJson,
   voyagerQueryUrl,
 } from "./linkedinClient";
@@ -374,6 +375,7 @@ function listHeaders(csrfToken: string, referer: string): Record<string, string>
 /** Descarga tarjetas de empleos. Solo servidor — cookies desde env. */
 export async function fetchLinkedInJobList(
   opts: Partial<JobSearchRequest> = {},
+  session: LinkedInSessionCredentials,
 ): Promise<LinkedInJobCard[]> {
   const countryOpt = resolveCountry(
     opts.country ?? DEFAULT_JOB_SEARCH_DEFAULTS.country,
@@ -385,7 +387,7 @@ export async function fetchLinkedInJobList(
     opts.start,
   );
   const referer = jobSearchRefererUrl(opts.keywords ?? "", countryOpt);
-  const { cookieHeader, csrfToken } = linkedinCookiesOrThrow();
+  const { cookieHeader, csrfToken } = linkedinCookiesFromCredentials(session);
   const url = voyagerQueryUrl(JOBS_URL, params);
   const response = await fetch(url, {
     method: "GET",

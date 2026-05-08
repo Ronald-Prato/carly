@@ -1,10 +1,9 @@
 /** LinkedIn Voyager URL encoding, cookies, and headers — mirrors linkedin_client.py */
 
-/** Fallback si no hay env (equivalente a linkedin_client._DEFAULT_* en Python). */
-const DEFAULT_LI_AT =
-  "AQEDASiQXN8DlWIrAAABncvY_C0AAAGd7-WALU0AOLj_NMEqrNQs2V4YkydZMePeCzP9ggizFyUBJvq27dZKqc6-8aKc1-aLtIuy2iOqQoXbNvHm4ighn1jmcf86JxEHrE_Fvq4bxaObTdS38QDtY-MT";
-
-const DEFAULT_JSESSIONID = "ajax:5776593099345541695";
+export type LinkedInSessionCredentials = {
+  liAt: string;
+  jsessionId: string;
+};
 
 const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
@@ -55,28 +54,14 @@ export function voyagerQueryUrl(
   return `${baseUrl}?${parts.join("&")}`;
 }
 
-function liAt(): string {
-  return (
-    process.env.LINKEDIN_LI_AT ?? process.env.LI_AT ?? DEFAULT_LI_AT
-  );
-}
-
-export function jsessionId(): string {
-  return (
-    process.env.LINKEDIN_JSESSIONID ??
-    process.env.JSESSIONID ??
-    DEFAULT_JSESSIONID
-  );
-}
-
-/** LinkedIn Cookie header plus CSRF (`ajax:…`). Env opcional; por defecto mismos valores que el scraper Python. */
-export function linkedinCookiesOrThrow(): { cookieHeader: string; csrfToken: string } {
-  const lat = liAt();
-  const jid = jsessionId();
+/** Cookie header + token CSRF a partir de credenciales guardadas en Convex (u otra fuente). */
+export function linkedinCookiesFromCredentials(
+  creds: LinkedInSessionCredentials,
+): { cookieHeader: string; csrfToken: string } {
+  const lat = creds.liAt.trim();
+  const jid = creds.jsessionId.trim();
   if (!lat || !jid) {
-    throw new Error(
-      "Faltan LINKEDIN_LI_AT/LI_AT o LINKEDIN_JSESSIONID/JSESSIONID.",
-    );
+    throw new Error("Sesión LinkedIn incompleta: faltan li_at o JSESSIONID.");
   }
   const jidForCookie = jid.startsWith('"') ? jid : `"${jid}"`;
   const cookieHeader = `li_at=${encodeURIComponent(lat)}; JSESSIONID=${jidForCookie}`;

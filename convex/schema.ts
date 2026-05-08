@@ -133,4 +133,15 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_userId_and_linkedInPostingId", ["userId", "linkedInPostingId"]),
+  /**
+   * Cookies de sesión LinkedIn (Voyager). Una fila con `current: true` es la
+   * activa; el resto es histórico.
+   */
+  sessions: defineTable({
+    liAt: v.string(),
+    jsessionId: v.string(),
+    current: v.boolean(),
+    /** 0–3 para la semilla fija; omitido en sesiones creadas manualmente como `current`. */
+    index: v.optional(v.number()),
+  }).index("by_current", ["current"]),
 });

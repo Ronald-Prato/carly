@@ -4,7 +4,8 @@
 
 import {
   baseHeaders,
-  linkedinCookiesOrThrow,
+  linkedinCookiesFromCredentials,
+  type LinkedInSessionCredentials,
   liTrackJson,
   voyagerQueryUrl,
 } from "./linkedinClient";
@@ -577,6 +578,7 @@ export function parseTopCardSummaryFromPayload(
 
 export async function fetchTopFitCardGraphql(
   jobId: string,
+  session: LinkedInSessionCredentials,
 ): Promise<LinkedInTopFitCardBlock> {
   const jid = jobId.trim();
   const queryId =
@@ -592,7 +594,7 @@ export async function fetchTopFitCardGraphql(
   }
 
   const url = topFitGraphqlUrl(jid, queryId);
-  const { cookieHeader, csrfToken } = linkedinCookiesOrThrow();
+  const { cookieHeader, csrfToken } = linkedinCookiesFromCredentials(session);
   const response = await fetch(url, {
     method: "GET",
     headers: {

@@ -263,6 +263,10 @@ export default function JobsPage() {
   const matchJobsWithCvAction = useAction(
     api.jobs.matchJobsWithCv.matchJobsWithCv,
   );
+  const linkedInSessionPreview = useQuery(
+    api.database.sessions.getCurrentForViewer,
+    {},
+  );
   const savedPostingIds = useQuery(api.savedJobOffers.postingIds, {});
   const saveOffer = useMutation(api.savedJobOffers.save);
   const removeOffer = useMutation(api.savedJobOffers.remove);
@@ -286,6 +290,22 @@ export default function JobsPage() {
     offersUnlocked,
     setOffersUnlocked,
   } = useJobsSearchSession();
+
+  useEffect(() => {
+    if (linkedInSessionPreview === undefined) {
+      return;
+    }
+    if (linkedInSessionPreview === null) {
+      console.log(
+        "[/jobs] Sesión LinkedIn en Convex: no hay fila con current: true (o sin sesión en la app).",
+      );
+      return;
+    }
+    console.log("[/jobs] Sesión LinkedIn cargada desde Convex (la usa el backend):", {
+      li_at: linkedInSessionPreview.liAt,
+      JSESSIONID: linkedInSessionPreview.jsessionId,
+    });
+  }, [linkedInSessionPreview]);
 
   const handleToggleSave = useCallback(
     async (job: EnrichedJobCard) => {
